@@ -6,6 +6,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, AdaBoostRegressor
+from sklearn.multioutput import MultiOutputRegressor
+
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.linear_model import LinearRegression
+
+SEED = 42  # random seed
 
 games = pd.read_csv('hb_train_feature.csv')
 games = games.to_numpy()
@@ -140,14 +147,48 @@ def nash_eq(games):
 def level_k(games, k):
     pass
 
-def machine_learn():
-    kfold = KFold(n_splits=5, shuffle=True, random_state=42)
-    for train_idx, test_idx in kfold.split(games):
-        print('train', train_idx)
-        print('test', test_idx)
+def machine_learn(n_splits=5):
+    print('------------')
+    print('machine learning')
+    freq_dist = np.zeros(n_splits)
+    action_accuracy = np.zeros(n_splits)
+    kfold = KFold(n_splits=n_splits, shuffle=True, random_state=SEED)
+    for i, (train_idx, test_idx) in enumerate(kfold.split(games)):
+        X = games[train_idx]
+        y = truths[train_idx, :3]
 
+        X_test = games[test_idx]
+        y_test = truths[test_idx]
+
+        # regr = RandomForestRegressor(n_estimators=100, max_depth=None, random_state=SEED)
+        regr = LinearRegression()
+        # regr = DecisionTreeRegressor()
+
+        # single_regr = AdaBoostRegressor(n_estimators=100, random_state=SEED)
+        # single_regr = GradientBoostingRegressor(n_estimators=100, random_state=SEED)
+        #
+        # regr = MultiOutputRegressor(single_regr)
+
+        regr.fit(X, y)
+
+        y_predict = regr.predict(X_test)
+
+        # normalize forecasts
+        sum = y_predict.sum(axis=1)
+        y_predict /= sum[:, np.newaxis]
+
+        freq_dist[i], action_accuracy[i] = eval_forecast(y_predict, y_test)
+
+    avg_freq_dist = np.mean(freq_dist)
+    avg_action_accuracy = np.mean(action_accuracy)
+    print('Q = {:.4f}, A = {:.3f}'.format(avg_freq_dist, avg_action_accuracy))
+
+machine_learn()
+
+import sys
+sys.exit(0)
 # repeat multiple times to smooth out randomness
-num_repeats = 10
+num_repeats = 1
 
 freq_dist = np.zeros(num_repeats)
 action_accuracy = np.zeros(num_repeats)
@@ -163,4 +204,3 @@ for i in range(num_repeats):
 avg_freq_dist = np.mean(freq_dist)
 avg_action_accuracy = np.mean(action_accuracy)
 print('avg Q = {:.4f}, A = {:.3f}'.format(avg_freq_dist, avg_action_accuracy))
-#machine_learn()
