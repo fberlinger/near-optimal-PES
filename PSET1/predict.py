@@ -1,3 +1,7 @@
+""" CS236R pset 1
+Florian Berlinger and Lily Xu
+March 2020 """
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -28,9 +32,11 @@ def eval_forecast(forecasts, truths):
     return (freq_dist, action_accuracy)
 
 def random_guess():
-    return np.random.rand(250,3)
+    """ baseline: random guessing """
+    return np.random.rand(250, 3)
 
 def nash_eq(games):
+    """ mixed-strategy Nash equilibrium """
     def pivot(A, r, s):
         # pivots the tableau on the given row and column
         m = len(A)
@@ -78,7 +84,7 @@ def nash_eq(games):
             # choose tableau
             LP = tab[player]
             m_ = len(LP)
-            
+
             # find pivot row (variable exiting)
             max_ = 0
             ind = -1
@@ -87,27 +93,27 @@ def nash_eq(games):
                 if t > max_:
                     ind = i
                     max_ = t
-            
+
             if max_ > 0:
                 tab[player] = pivot(LP, ind, k)
             else:
                 break
-            
+
             # swap labels, set entering variable
             temp = row_labels[player][ind]
             row_labels[player][ind] = k
             k = temp
-            
+
             # if the entering variable is the same as the starting pivot, break
             if k == k0:
                 break
-            
+
             # update the tableau index
             if player == 0:
                 player = 1
             else:
                 player = 0
-            
+
         # extract the Nash equilibrium
         nash_eq = [[], []]
 
@@ -121,7 +127,7 @@ def nash_eq(games):
                     x[rows[i]] = LP[i][m+n] / LP[i][rows[i]]
                 elif player == 1 and rows[i] > size_[1]-1:
                     x[rows[i]-size_[1]] = LP[i][m+n] / LP[i][rows[i]]
-                    
+
             nash_eq[player] = x/sum(x)
 
         forecasts[game_no,0] = nash_eq[0][0]
@@ -140,9 +146,21 @@ def machine_learn():
         print('train', train_idx)
         print('test', test_idx)
 
-#forecasts = random_guess()
-forecasts = nash_eq(games)
-#forecasts = level_k(games, 1)
-freq_dist, action_accuracy = eval_forecast(forecasts, truths)
-print(freq_dist, action_accuracy)
+# repeat multiple times to smooth out randomness
+num_repeats = 10
+
+freq_dist = np.zeros(num_repeats)
+action_accuracy = np.zeros(num_repeats)
+
+for i in range(num_repeats):
+    # freq_dist = []
+
+    forecasts = random_guess()
+    # forecasts = nash_eq(games)
+    #forecasts = level_k(games, 1)
+    freq_dist[i], action_accuracy[i] = eval_forecast(forecasts, truths)
+
+avg_freq_dist = np.mean(freq_dist)
+avg_action_accuracy = np.mean(action_accuracy)
+print('avg Q = {:.4f}, A = {:.3f}'.format(avg_freq_dist, avg_action_accuracy))
 #machine_learn()
