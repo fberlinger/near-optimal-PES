@@ -43,6 +43,12 @@ def random_guess():
     """ baseline: random guessing """
     return np.random.rand(250, 3)
 
+def reshape_game(game):
+    """ reformat data """
+    row = game[:9].reshape((3,3)) # payoff row player
+    col = game[9:].reshape((3,3)) # payoff column player
+
+    return row, col
 
 def nash_eq(games):
     """ mixed-strategy Nash equilibrium """
@@ -67,9 +73,7 @@ def nash_eq(games):
     forecasts = np.empty([len(games),3])
     game_no = 0
     for game in games:
-        # data reformatting
-        A = game[:9].reshape((3,3)) # payoff row player
-        B = game[9:].reshape((3,3)) # payoff column player
+        A, B = reshape_game(game)
 
         # initialization of Tableaux
         tab = [[], []]
@@ -146,11 +150,41 @@ def nash_eq(games):
 
     return forecasts
 
+
 def level_k(games, k):
-    pass
-    # level-0: column player maximizes their payoff
-    # level-1: column player maximizes their payoff assuming row player chooses max action
-    
+    """ level-k behavioral model """
+    def max_action(payoff):
+        """ given a 3x3 payoff matrix, calculate max payoff
+        assuming opponent plays max action """
+        avg_payoff = payoff.mean(axis=1)
+        action = np.argmax(avg_payoff)
+        return action
+
+    if k == 0:
+        # level-0: random strategy
+        return random_guess()
+    elif k == 1:
+        # level-1: max payoff assuming column player uses random strategy
+        forecasts = np.zeros((len(games), 3))
+        for i, game in enumerate(games):
+            row, col = reshape_game(game)
+            action = max_action(row)
+            forecasts[i, action] = 1
+    elif k == 2:
+        # level-2: max payoff assuming column player uses level-1
+        forecasts = np.zeros((len(games), 3))
+        for i, game in enumerate(games):
+            row, col = reshape_game(game)
+            col_action = max_action(col.T)
+
+            action = np.argmax(row[:, col_action])
+            forecasts[i, action] = 1
+
+    else:
+        raise Exception('level-k not implemented for k={}'.format(k))
+
+    return forecasts
+
 
 def ml_predict(X, y, X_test, model):
     """ return predictions using specified ML model
@@ -180,7 +214,6 @@ def ml_predict(X, y, X_test, model):
     y_predict /= sum[:, np.newaxis]
 
     return y_predict
-
 
 
 def machine_learn(model, n_splits=5):
@@ -236,10 +269,10 @@ def hybrid(model, n_splits=5):
 
 
 # machine_learn(model='linear')
-hybrid(model='gb')
+# hybrid(model='gb')
 
-import sys
-sys.exit(0)
+# import sys
+# sys.exit(0)
 
 # repeat multiple times to smooth out randomness
 num_repeats = 1
@@ -248,10 +281,9 @@ freq_dist = np.zeros(num_repeats)
 action_accuracy = np.zeros(num_repeats)
 
 for i in range(num_repeats):
-
-    forecasts = random_guess()
+    # forecasts = random_guess()
     # forecasts = nash_eq(games)
-    #forecasts = level_k(games, 1)
+    forecasts = level_k(games, 1)
     freq_dist[i], action_accuracy[i] = eval_forecast(forecasts, truths)
 
 avg_freq_dist = np.mean(freq_dist)
