@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, AdaBoostRegressor
 from sklearn.multioutput import MultiOutputRegressor
-
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.linear_model import LinearRegression
 
@@ -148,6 +147,8 @@ def level_k(games, k):
     pass
 
 def ml_predict(X, y, X_test, model):
+    """ return predictions using specified ML model
+    helper function used by machine_learn and hybrid """
     if model == 'rf':
         regr = RandomForestRegressor(n_estimators=100, max_depth=None, random_state=SEED)
     elif model == 'linear':
