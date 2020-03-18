@@ -147,7 +147,7 @@ def nash_eq(games):
 def level_k(games, k):
     pass
 
-def machine_learn(n_splits=5):
+def machine_learn(n_splits=5, model='linear'):
     print('------------')
     print('machine learning')
     freq_dist = np.zeros(n_splits)
@@ -160,14 +160,21 @@ def machine_learn(n_splits=5):
         X_test = games[test_idx]
         y_test = truths[test_idx]
 
-        # regr = RandomForestRegressor(n_estimators=100, max_depth=None, random_state=SEED)
-        regr = LinearRegression()
-        # regr = DecisionTreeRegressor()
+        if model == 'dt':
+            regr = RandomForestRegressor(n_estimators=100, max_depth=None, random_state=SEED)
+        elif model == 'linear':
+            regr = LinearRegression()
+        elif model == 'dt':
+            regr = DecisionTreeRegressor()
+        elif model in ['AdaBoost', 'gb']:
+            if model == 'AdaBoost':
+                single_regr = AdaBoostRegressor(n_estimators=100, random_state=SEED)
+            elif model == 'gb':
+                single_regr = GradientBoostingRegressor(n_estimators=100, random_state=SEED)
 
-        # single_regr = AdaBoostRegressor(n_estimators=100, random_state=SEED)
-        # single_regr = GradientBoostingRegressor(n_estimators=100, random_state=SEED)
-        #
-        # regr = MultiOutputRegressor(single_regr)
+            regr = MultiOutputRegressor(single_regr)
+        else:
+            throw Exception('model {} not recognized'.format(model))
 
         regr.fit(X, y)
 
