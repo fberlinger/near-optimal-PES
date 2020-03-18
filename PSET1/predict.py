@@ -20,6 +20,9 @@ truths = truths.to_numpy()
 
 
 def eval_forecast(forecasts, truths):
+    """ return (Q, A) where
+    Q = quadratic distance of the frequency distribution
+    A = accuracy """
     no_forecasts = len(forecasts)
     freq_dist = 0
     action_accuracy = 0
@@ -27,19 +30,19 @@ def eval_forecast(forecasts, truths):
     for i in range(no_forecasts):
         freq_dist += (forecasts[i,0] - truths[i,0])**2 + (forecasts[i,1] - truths[i,1])**2 + (forecasts[i,2] - truths[i,2])**2
 
-        action = np.argmax(forecasts[i,:3])
-        #actions = max(forecasts[i,:3])
-        #action = max(np.argwhere(forecasts[i,:3] == actions))
-        if action == truths[i,3]-1: # 0 vs 1 index
+        action = np.argmax(forecasts[i, :3])
+        if action == truths[i,3] - 1: # 0 vs 1 index
             action_accuracy += 1
 
     freq_dist /= no_forecasts
     action_accuracy /= no_forecasts
     return (freq_dist, action_accuracy)
 
+
 def random_guess():
     """ baseline: random guessing """
     return np.random.rand(250, 3)
+
 
 def nash_eq(games):
     """ mixed-strategy Nash equilibrium """
@@ -75,8 +78,8 @@ def nash_eq(games):
 
         # row labels
         row_labels = [[], []]
-        row_labels[0].extend(range(m,m+n))
-        row_labels[1].extend(range(0,m))
+        row_labels[0].extend(range(m, m+n))
+        row_labels[1].extend(range(0, m))
 
         # initial player
         k = k0
@@ -124,7 +127,7 @@ def nash_eq(games):
         nash_eq = [[], []]
 
         for player in range(2):
-            x = [0]*size_[player]
+            x = [0] * size_[player]
             rows = row_labels[player]
             LP = tab[player]
 
@@ -145,6 +148,9 @@ def nash_eq(games):
 
 def level_k(games, k):
     pass
+    # level-0: column player maximizes their payoff
+    # level-1: column player maximizes their payoff assuming row player chooses max action
+    
 
 def ml_predict(X, y, X_test, model):
     """ return predictions using specified ML model
@@ -242,7 +248,6 @@ freq_dist = np.zeros(num_repeats)
 action_accuracy = np.zeros(num_repeats)
 
 for i in range(num_repeats):
-    # freq_dist = []
 
     forecasts = random_guess()
     # forecasts = nash_eq(games)
