@@ -147,11 +147,43 @@ def nash_eq(games):
 def level_k(games, k):
     pass
 
-def machine_learn(n_splits=5, model='linear'):
+def ml_predict(X, y, X_test, model):
+    if model == 'rf':
+        regr = RandomForestRegressor(n_estimators=100, max_depth=None, random_state=SEED)
+    elif model == 'linear':
+        regr = LinearRegression()
+    elif model == 'dt':
+        regr = DecisionTreeRegressor()
+    elif model in ['AdaBoost', 'gb']:
+        if model == 'AdaBoost':
+            single_regr = AdaBoostRegressor(n_estimators=100, random_state=SEED)
+        elif model == 'gb':
+            single_regr = GradientBoostingRegressor(n_estimators=100, random_state=SEED)
+
+        regr = MultiOutputRegressor(single_regr)
+    else:
+        raise Exception('model {} not recognized'.format(model))
+
+    regr.fit(X, y)
+
+    y_predict = regr.predict(X_test)
+
+    # normalize forecasts
+    sum = y_predict.sum(axis=1)
+    y_predict /= sum[:, np.newaxis]
+
+    return y_predict
+
+
+
+def machine_learn(model, n_splits=5):
+    """ pure machine learning """
     print('------------')
-    print('machine learning')
+    print('machine learning, model = {}'.format(model))
+
     freq_dist = np.zeros(n_splits)
     action_accuracy = np.zeros(n_splits)
+
     kfold = KFold(n_splits=n_splits, shuffle=True, random_state=SEED)
     for i, (train_idx, test_idx) in enumerate(kfold.split(games)):
         X = games[train_idx]
@@ -160,40 +192,48 @@ def machine_learn(n_splits=5, model='linear'):
         X_test = games[test_idx]
         y_test = truths[test_idx]
 
-        if model == 'dt':
-            regr = RandomForestRegressor(n_estimators=100, max_depth=None, random_state=SEED)
-        elif model == 'linear':
-            regr = LinearRegression()
-        elif model == 'dt':
-            regr = DecisionTreeRegressor()
-        elif model in ['AdaBoost', 'gb']:
-            if model == 'AdaBoost':
-                single_regr = AdaBoostRegressor(n_estimators=100, random_state=SEED)
-            elif model == 'gb':
-                single_regr = GradientBoostingRegressor(n_estimators=100, random_state=SEED)
-
-            regr = MultiOutputRegressor(single_regr)
-        else:
-            throw Exception('model {} not recognized'.format(model))
-
-        regr.fit(X, y)
-
-        y_predict = regr.predict(X_test)
-
-        # normalize forecasts
-        sum = y_predict.sum(axis=1)
-        y_predict /= sum[:, np.newaxis]
-
+        y_predict = ml_predict(X, y, X_test, model)
         freq_dist[i], action_accuracy[i] = eval_forecast(y_predict, y_test)
 
     avg_freq_dist = np.mean(freq_dist)
     avg_action_accuracy = np.mean(action_accuracy)
     print('Q = {:.4f}, A = {:.3f}'.format(avg_freq_dist, avg_action_accuracy))
 
-machine_learn()
+
+def hybrid(model, n_splits=5):
+    """ add behavior model predictions as ML features """
+    print('------------')
+    print('hybrid, model = {}'.format(model))
+
+    forecasts = nash_eq(games)
+
+    all_X = np.concatenate((games, forecasts), axis=1)
+
+    freq_dist = np.zeros(n_splits)
+    action_accuracy = np.zeros(n_splits)
+
+    kfold = KFold(n_splits=n_splits, shuffle=True, random_state=SEED)
+    for i, (train_idx, test_idx) in enumerate(kfold.split(games)):
+        X = all_X[train_idx]
+        y = truths[train_idx, :3]
+
+        X_test = all_X[test_idx]
+        y_test = truths[test_idx]
+
+        y_predict = ml_predict(X, y, X_test, model)
+        freq_dist[i], action_accuracy[i] = eval_forecast(y_predict, y_test)
+
+    avg_freq_dist = np.mean(freq_dist)
+    avg_action_accuracy = np.mean(action_accuracy)
+    print('Q = {:.4f}, A = {:.3f}'.format(avg_freq_dist, avg_action_accuracy))
+
+
+# machine_learn(model='linear')
+hybrid(model='gb')
 
 import sys
 sys.exit(0)
+
 # repeat multiple times to smooth out randomness
 num_repeats = 1
 
