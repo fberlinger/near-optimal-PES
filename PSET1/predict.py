@@ -1,25 +1,6 @@
-"""CS236R PSET1, Florian Berlinger and Lily Xu, March 2020 
+"""CS236R PSET1, Florian Berlinger and Lily Xu, March 2020
 
-Attributes:
-    A_results (list): Description
-    behaviors (list): Description
-    colors (list): Description
-    descriptors (list): Description
-    models (list): Description
-    predictions (TYPE): Description
-    Q_results (list): Description
-    SEED (int): Description
-    test_features (TYPE): Description
-    train_features (TYPE): Description
-    train_truths (TYPE): Description
-    training (bool): Description
-
-Deleted Attributes:
-    action_accuracy (TYPE): Description
-    avg_action_accuracy (TYPE): Description
-    avg_freq_dist (TYPE): Description
-    freq_dist (TYPE): Description
-    num_repeats (int): Description
+Given a training set of 250 3x3 bi-matrix games, this script attempts to infer the behavior of the row player and make predictions on a test set accordingly. Evaluation metrics include the quadratic distance of the frequency distribution (Q) and the accuracy in predicting the most frequently chosen action (A). Behavioral inference and prediction are attempted using traditional models such as Nash Equilibrium or Level-k, Machine Learning strategies including Linear Regression and Gradient Boost, as well as Hybrid models that combine the former two approaches.
 """
 
 import math
@@ -27,23 +8,21 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, AdaBoostRegressor
-from sklearn.multioutput import MultiOutputRegressor
-from sklearn.tree import DecisionTreeRegressor
 from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.multioutput import MultiOutputRegressor
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, AdaBoostRegressor
 
-
+## EVALUATION FUNCTIONS
 def eval_forecast(predictions, truths):
-    """return (Q, A) where
-    Q = quadratic distance of the frequency distribution
-    A = accuracy 
+    """Evaluates predictions against given true row action distribution.
     
     Args:
-        predictions (TYPE): Description
-        truths (TYPE): Description
+        predictions (250x4 np-array of floats): predicted (f1, f2, f3, Action)
+        truths (250x4 np-array of floats): true (f1, f2, f3, Action)
     
     Returns:
-        TYPE: Description
+        tuple of floats: (Q, A)
     """
     no_predictions = len(predictions)
     freq_dist = 0
@@ -62,25 +41,25 @@ def eval_forecast(predictions, truths):
     return (freq_dist, action_accuracy)
 
 def print_to_terminal(exp, Q, A):
-    """Summary
+    """Prints Q&A results for each experiment to terminal.
     
     Args:
-        exp (TYPE): Description
-        Q (TYPE): Description
-        A (TYPE): Description
+        exp (string): Experiment descriptor
+        Q (float): Final Q score
+        A (float): Final A score
     """
     print(exp)
     print('Q = {:.3f}, A = {:.3f}\n'.format(Q, A))
 
 def plot(Q, A, descriptors, winner, colors):
-    """Summary
+    """Creates a Q vs A scatter plot for all experiments. Behaviors are in red, ML in blue, Hybrids in purple.
     
     Args:
-        Q (TYPE): Description
-        A (TYPE): Description
-        descriptors (TYPE): Description
-        colors (TYPE): Description
-        winner (TYPE): Description
+        Q (list of floats): Q scores of experiments
+        A (list of floats): A scores of experiments
+        descriptors (list of strings): Experiment descriptors
+        winner (int): Index of the winning experiment
+        colors (list of strings): Colors of datapoints
     """
     
     fig, axs = plt.subplots(figsize=(10,6))
@@ -95,24 +74,85 @@ def plot(Q, A, descriptors, winner, colors):
     plt.close()
 
 def write_to_csv(predictions):
-    """Summary
+    """Writes predictions to csv in 250x4 format (for evaluation against truth).
     
     Args:
-        predictions (TYPE): Description
+        predictions (250x4 np-array of floats): predicted (f1, f2, f3, Action)
     """
     predictions = pd.DataFrame(predictions)
     predictions.columns = ['f1', 'f2', 'f3', 'action']
     predictions.to_csv('hb_test_pred.csv', index=False)
 
-def random_guess(num_repeats, subfunc=False):
-    """baseline: random guessing 
-    
-    Returns:
-        numpy array of floats (len(features), 4): normalized random freqs and action
+## HELPER FUNCTIONS
+def reshape_feature(feature):
+    """reformat data 
     
     Args:
-        num_repeats (TYPE): Description
-        subfunc (bool, optional): Description
+        feature (18x1 np-array of ints): A single game
+    
+    Returns:
+        tuple of 3x3 np-arrays of ints: Row and col player payoff matrices
+    """
+    row = feature[:9].reshape((3,3)) # payoff row player
+    col = feature[9:].reshape((3,3)) # payoff column player
+
+    return (row, col)
+
+def ml_predict(X, y, X_test, model):
+    """Helper function that returns predictions using specified ML model. 
+    
+    Args:
+        X (np-array of floats): Training features
+        y (np-array of floats): Training truths
+        X_test (np-array of floats): Testing features
+        model (string): ML model descriptor
+    
+    Returns:
+        y_predict (250x4 np-array of floats): (f1, f2, f3, Action)
+    
+    Raises:
+        Exception: Unknown model
+    """
+
+    if model == 'Linear Regression':
+        regr = LinearRegression()
+    elif model == 'Decision Tree':
+        regr = DecisionTreeRegressor()
+    elif model == 'Random Forest':
+        regr = RandomForestRegressor(n_estimators=100, max_depth=None, random_state=SEED)
+    elif model == 'Gradient Boost':
+        single_regr = GradientBoostingRegressor(n_estimators=100, random_state=SEED)
+        regr = MultiOutputRegressor(single_regr)
+    elif model == 'Ada Boost':
+        single_regr = AdaBoostRegressor(n_estimators=100, random_state=SEED)
+        regr = MultiOutputRegressor(single_regr)
+    else:
+        raise Exception('model {} not recognized'.format(model))
+
+    # fit and predict
+    regr.fit(X, y)
+    y_predict = regr.predict(X_test)
+
+    # normalize predictions and add action
+    freq_sum = y_predict[:,:3].sum(axis=1)
+    y_predict /= freq_sum[:, np.newaxis]
+    y_predict[:,3] = np.argmax(y_predict[:,:3], axis=1) + 1 # action
+    
+    return y_predict
+
+## MAIN FUNCTIONS
+# Behavioral models
+def random_guess(num_repeats, subfunc=False):
+    """Allocates random frequencies to the row actions.
+    
+    Returns:
+        predictions (250x4 np-array of floats): predicted (f1, f2, f3, Action)
+        Q (float): Averaged Q score
+        A (float): Averaged A score
+    
+    Args:
+        num_repeats (int): Q and A averaged over num_repeats instances of random guessing
+        subfunc (bool, optional): Won't print if used as subfunc of Level-0
     """
     freq_dist = np.zeros(num_repeats)
     action_accuracy = np.zeros(num_repeats)
@@ -141,42 +181,20 @@ def random_guess(num_repeats, subfunc=False):
     else:
         return (predictions, avg_freq_dist, avg_action_accuracy)
 
-def reshape_feature(feature):
-    """reformat data 
-    
-    Args:
-        feature (TYPE): Description
-    
-    Returns:
-        TYPE: Description
-    """
-    row = feature[:9].reshape((3,3)) # payoff row player
-    col = feature[9:].reshape((3,3)) # payoff column player
-
-    return row, col
-
 def nash_eq(features, subfunc=False):
-    """mixed-strategy Nash equilibrium 
+    """Mixed-strategy Nash Equilibrium as per the Lemke Howson Algorithm
     
     Args:
-        features (TYPE): Description
-        subfunc (bool, optional): Description
+        features (250x18 np-array of ints): Games
+        subfunc (bool, optional): Won't print if used as subfunc of Hybrid
     
     Returns:
-        TYPE: Description
+        predictions (250x4 np-array of floats): (f1, f2, f3, Action)
     """
     def pivot(A, r, s):
-        """Summary
-        
-        Args:
-            A (TYPE): Description
-            r (TYPE): Description
-            s (TYPE): Description
-        
-        Returns:
-            TYPE: Description
+        """Helper function that pivots the tableau on the given row and column
         """
-        # pivots the tableau on the given row and column
+
         m = len(A)
         B = A
         for i in range(m):
@@ -187,10 +205,9 @@ def nash_eq(features, subfunc=False):
 
         return B
 
-    # Lemke Howson algorithm
     m = 3
     n = 3
-    size_ = [m,n]
+    size_ = [m,n] # game size
     k0 = 0
 
     predictions = np.empty([len(features),4])
@@ -198,12 +215,13 @@ def nash_eq(features, subfunc=False):
     for feature in features:
         A, B = reshape_feature(feature)
 
+        # positive payoffs only
         lowest = min(np.amin(A), np.amin(B))
         if lowest <= 0:
             A = A + (-lowest+1)
             B = B + (-lowest+1)
 
-        # initialization of Tableaux
+        # initialization of tableaux
         tab = [[], []]
         tab[0] = np.concatenate((np.transpose(B), np.eye(n), np.ones((n,1))), axis=1)
         tab[1] = np.concatenate((np.eye(m), A, np.ones((m,1))), axis=1)
@@ -240,7 +258,6 @@ def nash_eq(features, subfunc=False):
                 if t > max_:
                     ind = i
                     max_ = t
-
             if max_ > 0:
                 tab[player] = pivot(LP, ind, k)
             else:
@@ -284,39 +301,33 @@ def nash_eq(features, subfunc=False):
         feature_no += 1
 
     (freq_dist, action_accuracy) = eval_forecast(predictions, truths)
+    
     if not subfunc:
         Q_results.append(freq_dist)
         A_results.append(action_accuracy)
         descriptors.append('NASH EQUILIBRIUM')
         colors.append('r')
-
         print_to_terminal('NASH EQUILIBRIUM', freq_dist, action_accuracy)
 
     return predictions
 
 def level_k(features, k, subfunc=False):
-    """level-k behavioral model 
+    """Level-k behavioral model 
     
     Args:
-        features (TYPE): Description
-        k (TYPE): Description
-        subfunc (bool, optional): Description
+        features (250x18 np-array of ints): Games
+        k (int): Level (0-2)
+        subfunc (bool, optional): Won't print if used as subfunc of Hybrid
     
     Returns:
-        TYPE: Description
+        predictions (250x4 np-array of floats): (f1, f2, f3, Action)
     
     Raises:
-        Exception: Description
+        Exception: Unknown k
     """
+
     def max_action(payoff):
-        """given a 3x3 payoff matrix, calculate max payoff
-        assuming opponent plays max action 
-        
-        Args:
-            payoff (TYPE): Description
-        
-        Returns:
-            TYPE: Description
+        """Heper function to calculate max payoff given a 3x3 payoff matrix and assuming opponent plays max action.
         """
         avg_payoff = payoff.mean(axis=1)
         action = np.argmax(avg_payoff)
@@ -358,58 +369,17 @@ def level_k(features, k, subfunc=False):
 
     return predictions
 
-def ml_predict(X, y, X_test, model):
-    """return predictionsictions using specified ML model
-    helper function used by machine_learn and hybrid 
-    
-    Args:
-        X (TYPE): Description
-        y (TYPE): Description
-        X_test (TYPE): Description
-        model (TYPE): Description
-    
-    Returns:
-        TYPE: Description
-    
-    Raises:
-        Exception: Description
-    """
-    if model == 'Random Forest':
-        regr = RandomForestRegressor(n_estimators=100, max_depth=None, random_state=SEED)
-    elif model == 'Linear Regression':
-        regr = LinearRegression()
-    elif model == 'Decision Tree':
-        regr = DecisionTreeRegressor()
-    elif model == 'Gradient Boost':
-        single_regr = GradientBoostingRegressor(n_estimators=100, random_state=SEED)
-        regr = MultiOutputRegressor(single_regr)
-    elif model == 'Ada Boost':
-        single_regr = AdaBoostRegressor(n_estimators=100, random_state=SEED)
-        regr = MultiOutputRegressor(single_regr)
-    else:
-        raise Exception('model {} not recognized'.format(model))
-
-    regr.fit(X, y)
-
-    y_predict = regr.predict(X_test)
-
-    # normalize predictions
-    freq_sum = y_predict[:,:3].sum(axis=1)
-    y_predict /= freq_sum[:, np.newaxis]
-
-
-    y_predict[:,3] = np.argmax(y_predict[:,:3], axis=1) + 1 # action
-    return y_predict
-
+# Machine learning
 def machine_learn(features, model, n_splits=5):
-    """pure machine learning 
+    """Pure machine learning 
     
     Args:
-        model (TYPE): Description
-        n_splits (int, optional): Description
+        features (250x18 np-array of ints): Games
+        model (string): ML model descriptor
+        n_splits (int, optional): Number of folds for x-validation
     
     Returns:
-        TYPE: Description
+        y_predict (250x4 np-array of floats): (f1, f2, f3, Action)
     """
     freq_dist = np.zeros(n_splits)
     action_accuracy = np.zeros(n_splits)
@@ -437,20 +407,23 @@ def machine_learn(features, model, n_splits=5):
 
     return y_predict
 
+# Hybrid models
 def hybrid(features, behavior, model, n_splits=5):
-    """add behavior model predictionsictions as ML features 
+    """Uses behavior model predictions as ML features 
     
     Args:
-        behavior (TYPE): Description
-        model (TYPE): Description
-        n_splits (int, optional): Description
+        features (250x4 np-array of floats): Games
+        behavior (string): Behavior descriptor
+        model (string): ML model descriptor
+        n_splits (int, optional): Number of folds for x-validation
     
     Returns:
-        TYPE: Description
+        y_predict (250x4 np-array of floats): (f1, f2, f3, Action)
     
     Raises:
-        Exception: Description
+        Exception: Unknown behavior
     """
+
     if behavior == 'Nash Equilibrium':
         predictions = nash_eq(features, True)
     elif behavior == 'Level-0':
@@ -462,9 +435,7 @@ def hybrid(features, behavior, model, n_splits=5):
     else:
         raise Exception('behavior {} not recognized'.format(behavior))
 
-
     all_X = np.concatenate((features, predictions), axis=1)
-
     freq_dist = np.zeros(n_splits)
     action_accuracy = np.zeros(n_splits)
 
@@ -492,9 +463,8 @@ def hybrid(features, behavior, model, n_splits=5):
     return y_predict
 
 
+# RUN EXPERIMENTS
 if __name__ == "__main__":
-    SEED = 42  # random seed
-
     # import data
     train_features = pd.read_csv('hb_train_feature.csv')
     train_features = train_features.to_numpy()
@@ -508,8 +478,11 @@ if __name__ == "__main__":
         features = train_features
         truths = train_truths
 
+    # ML
+    SEED = 42  # random seed
     models = ['Linear Regression', 'Decision Tree', 'Random Forest', 'Gradient Boost', 'Ada Boost']
 
+    # results
     Q_results = []
     A_results = []
     descriptors = []
@@ -536,6 +509,7 @@ if __name__ == "__main__":
         for model in models:
             predictions = hybrid(features, behavior, model)
 
+    # Winning model and plotting
     winner = np.argmax(A_results)
     print('The winning model is: {} with Q = {:.3f} and A = {:.3f}.'.format(descriptors[winner], Q_results[winner], A_results[winner]))
     plot(Q_results, A_results, descriptors, winner, colors)
