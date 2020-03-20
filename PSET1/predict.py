@@ -133,6 +133,13 @@ def ml_predict(X, y, X_test, model):
     regr.fit(X, y)
     y_predict = regr.predict(X_test)
 
+    # remove all negative frequencies
+    zero_idx = np.where(y_predict < 0)[0]
+    if len(zero_idx) > 0:
+        for i in range(len(zero_idx)):
+            min_val = np.min(y_predict[zero_idx[i], :3])
+            y_predict[zero_idx[i], :3] -= min_val
+
     # normalize predictions and add action
     freq_sum = y_predict[:,:3].sum(axis=1)
     y_predict /= freq_sum[:, np.newaxis]

@@ -11,7 +11,7 @@ from sklearn.linear_model import LinearRegression
 
 def write_to_csv(predictions):
     """Writes predictions to csv in 250x4 format (for evaluation against truth).
-    
+
     Args:
         predictions (250x4 np-array of floats): predicted (f1, f2, f3, Action)
     """
@@ -20,11 +20,11 @@ def write_to_csv(predictions):
     predictions.to_csv('hb_test_pred.csv', index=False)
 
 def reshape_feature(feature):
-    """Reformat games 
-    
+    """Reformat games
+
     Args:
         feature (18x1 np-array of ints): A single game
-    
+
     Returns:
         tuple of 3x3 np-arrays of ints: Row and col player payoff matrices
     """
@@ -35,11 +35,11 @@ def reshape_feature(feature):
 
 def nash_eq(features, subfunc=False):
     """Mixed-strategy Nash Equilibrium as per the Lemke Howson Algorithm
-    
+
     Args:
         features (250x18 np-array of ints): Games
         subfunc (bool, optional): Won't print if used as subfunc of Hybrid
-    
+
     Returns:
         predictions (250x4 np-array of floats): (f1, f2, f3, Action)
     """
@@ -151,7 +151,7 @@ def nash_eq(features, subfunc=False):
         predictions[feature_no,2] = nash_eq[0][2] # f3
         predictions[feature_no,3] = np.argmax(predictions[feature_no,:3]) + 1 # action (1-indexed)
         feature_no += 1
-    
+
     if not subfunc:
         Q_results.append(freq_dist)
         A_results.append(action_accuracy)
@@ -183,6 +183,13 @@ regr.fit(train_features_neq, train_truths)
 
 # make model-based prediction on test data
 predictions = regr.predict(test_features_neq)
+
+# remove all negative frequencies
+zero_idx = np.where(predictions < 0)[0]
+if len(zero_idx) > 0:
+    for i in range(len(zero_idx)):
+        min_val = np.min(predictions[zero_idx[i], :3])
+        predictions[zero_idx[i], :3] -= min_val
 
 # normalize predictions and add action
 freq_sum = predictions[:,:3].sum(axis=1)
