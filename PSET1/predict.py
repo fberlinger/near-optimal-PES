@@ -85,7 +85,7 @@ def write_to_csv(predictions):
 
 ## HELPER FUNCTIONS
 def reshape_feature(feature):
-    """reformat data 
+    """Reformat games 
     
     Args:
         feature (18x1 np-array of ints): A single game

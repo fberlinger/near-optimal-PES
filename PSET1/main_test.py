@@ -1,3 +1,7 @@
+'''CS236R PSET1, Florian Berlinger and Lily Xu, March 2020
+
+A minimal version of predict.py running the highest performing model on the training data and performing predition on the test data.
+'''
 
 import math
 import numpy as np
@@ -5,55 +9,44 @@ import pandas as pd
 from sklearn.model_selection import KFold
 from sklearn.linear_model import LinearRegression
 
-SEED = 42 # random seed
-
-
 def write_to_csv(predictions):
-    """Summary
+    """Writes predictions to csv in 250x4 format (for evaluation against truth).
     
     Args:
-        predictions (TYPE): Description
+        predictions (250x4 np-array of floats): predicted (f1, f2, f3, Action)
     """
     predictions = pd.DataFrame(predictions)
     predictions.columns = ['f1', 'f2', 'f3', 'action']
     predictions.to_csv('hb_test_pred.csv', index=False)
 
 def reshape_feature(feature):
-    """reformat data 
+    """Reformat games 
     
     Args:
-        feature (TYPE): Description
+        feature (18x1 np-array of ints): A single game
     
     Returns:
-        TYPE: Description
+        tuple of 3x3 np-arrays of ints: Row and col player payoff matrices
     """
     row = feature[:9].reshape((3,3)) # payoff row player
     col = feature[9:].reshape((3,3)) # payoff column player
 
-    return row, col
+    return (row, col)
 
 def nash_eq(features, subfunc=False):
-    """mixed-strategy Nash equilibrium 
+    """Mixed-strategy Nash Equilibrium as per the Lemke Howson Algorithm
     
     Args:
-        features (TYPE): Description
-        subfunc (bool, optional): Description
+        features (250x18 np-array of ints): Games
+        subfunc (bool, optional): Won't print if used as subfunc of Hybrid
     
     Returns:
-        TYPE: Description
+        predictions (250x4 np-array of floats): (f1, f2, f3, Action)
     """
     def pivot(A, r, s):
-        """Summary
-        
-        Args:
-            A (TYPE): Description
-            r (TYPE): Description
-            s (TYPE): Description
-        
-        Returns:
-            TYPE: Description
+        """Helper function that pivots the tableau on the given row and column
         """
-        # pivots the tableau on the given row and column
+
         m = len(A)
         B = A
         for i in range(m):
@@ -64,10 +57,9 @@ def nash_eq(features, subfunc=False):
 
         return B
 
-    # Lemke Howson algorithm
     m = 3
     n = 3
-    size_ = [m,n]
+    size_ = [m,n] # game size
     k0 = 0
 
     predictions = np.empty([len(features),4])
@@ -75,12 +67,13 @@ def nash_eq(features, subfunc=False):
     for feature in features:
         A, B = reshape_feature(feature)
 
+        # positive payoffs only
         lowest = min(np.amin(A), np.amin(B))
         if lowest <= 0:
             A = A + (-lowest+1)
             B = B + (-lowest+1)
 
-        # initialization of Tableaux
+        # initialization of tableaux
         tab = [[], []]
         tab[0] = np.concatenate((np.transpose(B), np.eye(n), np.ones((n,1))), axis=1)
         tab[1] = np.concatenate((np.eye(m), A, np.ones((m,1))), axis=1)
@@ -117,7 +110,6 @@ def nash_eq(features, subfunc=False):
                 if t > max_:
                     ind = i
                     max_ = t
-
             if max_ > 0:
                 tab[player] = pivot(LP, ind, k)
             else:
@@ -159,9 +151,15 @@ def nash_eq(features, subfunc=False):
         predictions[feature_no,2] = nash_eq[0][2] # f3
         predictions[feature_no,3] = np.argmax(predictions[feature_no,:3]) + 1 # action (1-indexed)
         feature_no += 1
+    
+    if not subfunc:
+        Q_results.append(freq_dist)
+        A_results.append(action_accuracy)
+        descriptors.append('NASH EQUILIBRIUM')
+        colors.append('r')
+        print_to_terminal('NASH EQUILIBRIUM', freq_dist, action_accuracy)
 
     return predictions
-
 
 # import data
 train_features = pd.read_csv('hb_train_feature.csv')
@@ -179,13 +177,14 @@ test_nash_predictions = nash_eq(test_features, True)
 test_features_neq = np.concatenate((test_features, test_nash_predictions), axis=1)
 
 # fit model on training data
+SEED = 42 # random seed
 regr = LinearRegression()
 regr.fit(train_features_neq, train_truths)
 
 # make model-based prediction on test data
 predictions = regr.predict(test_features_neq)
 
-# normalize predictions
+# normalize predictions and add action
 freq_sum = predictions[:,:3].sum(axis=1)
 predictions /= freq_sum[:, np.newaxis]
 predictions[:,3] = np.argmax(predictions[:,:3], axis=1) + 1 # action
