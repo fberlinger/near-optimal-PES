@@ -16,11 +16,11 @@ from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, A
 ## EVALUATION FUNCTIONS
 def eval_forecast(predictions, truths):
     """Evaluates predictions against given true row action distribution.
-    
+
     Args:
         predictions (250x4 np-array of floats): predicted (f1, f2, f3, Action)
         truths (250x4 np-array of floats): true (f1, f2, f3, Action)
-    
+
     Returns:
         tuple of floats: (Q, A)
     """
@@ -42,7 +42,7 @@ def eval_forecast(predictions, truths):
 
 def print_to_terminal(exp, Q, A):
     """Prints Q&A results for each experiment to terminal.
-    
+
     Args:
         exp (string): Experiment descriptor
         Q (float): Final Q score
@@ -53,7 +53,7 @@ def print_to_terminal(exp, Q, A):
 
 def plot(Q, A, descriptors, winner, colors):
     """Creates a Q vs A scatter plot for all experiments. Behaviors are in red, ML in blue, Hybrids in purple.
-    
+
     Args:
         Q (list of floats): Q scores of experiments
         A (list of floats): A scores of experiments
@@ -61,7 +61,7 @@ def plot(Q, A, descriptors, winner, colors):
         winner (int): Index of the winning experiment
         colors (list of strings): Colors of datapoints
     """
-    
+
     fig, axs = plt.subplots(figsize=(10,6))
     axs.scatter(Q, A, s=120, c=colors, alpha=0.5)
     axs.set_xlabel('Q', fontsize='large', fontweight='bold')
@@ -75,7 +75,7 @@ def plot(Q, A, descriptors, winner, colors):
 
 def write_to_csv(predictions):
     """Writes predictions to csv in 250x4 format (for evaluation against truth).
-    
+
     Args:
         predictions (250x4 np-array of floats): predicted (f1, f2, f3, Action)
     """
@@ -85,11 +85,11 @@ def write_to_csv(predictions):
 
 ## HELPER FUNCTIONS
 def reshape_feature(feature):
-    """Reformat games 
-    
+    """Reformat games
+
     Args:
         feature (18x1 np-array of ints): A single game
-    
+
     Returns:
         tuple of 3x3 np-arrays of ints: Row and col player payoff matrices
     """
@@ -99,17 +99,17 @@ def reshape_feature(feature):
     return (row, col)
 
 def ml_predict(X, y, X_test, model):
-    """Helper function that returns predictions using specified ML model. 
-    
+    """Helper function that returns predictions using specified ML model.
+
     Args:
         X (np-array of floats): Training features
         y (np-array of floats): Training truths
         X_test (np-array of floats): Testing features
         model (string): ML model descriptor
-    
+
     Returns:
         y_predict (250x4 np-array of floats): (f1, f2, f3, Action)
-    
+
     Raises:
         Exception: Unknown model
     """
@@ -133,23 +133,30 @@ def ml_predict(X, y, X_test, model):
     regr.fit(X, y)
     y_predict = regr.predict(X_test)
 
+    # remove all negative frequencies
+    zero_idx = np.where(y_predict < 0)[0]
+    if len(zero_idx) > 0:
+        for i in range(len(zero_idx)):
+            min_val = np.min(y_predict[zero_idx[i], :3])
+            y_predict[zero_idx[i], :3] -= min_val
+
     # normalize predictions and add action
     freq_sum = y_predict[:,:3].sum(axis=1)
     y_predict /= freq_sum[:, np.newaxis]
     y_predict[:,3] = np.argmax(y_predict[:,:3], axis=1) + 1 # action
-    
+
     return y_predict
 
 ## MAIN FUNCTIONS
 # Behavioral models
 def random_guess(num_repeats, subfunc=False):
     """Allocates random frequencies to the row actions.
-    
+
     Returns:
         predictions (250x4 np-array of floats): predicted (f1, f2, f3, Action)
         Q (float): Averaged Q score
         A (float): Averaged A score
-    
+
     Args:
         num_repeats (int): Q and A averaged over num_repeats instances of random guessing
         subfunc (bool, optional): Won't print if used as subfunc of Level-0
@@ -177,17 +184,17 @@ def random_guess(num_repeats, subfunc=False):
         print_to_terminal('RANDOM GUESSING', avg_freq_dist, avg_action_accuracy)
 
         return predictions # last one
-    
+
     else:
         return (predictions, avg_freq_dist, avg_action_accuracy)
 
 def nash_eq(features, subfunc=False):
     """Mixed-strategy Nash Equilibrium as per the Lemke Howson Algorithm
-    
+
     Args:
         features (250x18 np-array of ints): Games
         subfunc (bool, optional): Won't print if used as subfunc of Hybrid
-    
+
     Returns:
         predictions (250x4 np-array of floats): (f1, f2, f3, Action)
     """
@@ -301,7 +308,7 @@ def nash_eq(features, subfunc=False):
         feature_no += 1
 
     (freq_dist, action_accuracy) = eval_forecast(predictions, truths)
-    
+
     if not subfunc:
         Q_results.append(freq_dist)
         A_results.append(action_accuracy)
@@ -312,16 +319,16 @@ def nash_eq(features, subfunc=False):
     return predictions
 
 def level_k(features, k, subfunc=False):
-    """Level-k behavioral model 
-    
+    """Level-k behavioral model
+
     Args:
         features (250x18 np-array of ints): Games
         k (int): Level (0-2)
         subfunc (bool, optional): Won't print if used as subfunc of Hybrid
-    
+
     Returns:
         predictions (250x4 np-array of floats): (f1, f2, f3, Action)
-    
+
     Raises:
         Exception: Unknown k
     """
@@ -355,7 +362,7 @@ def level_k(features, k, subfunc=False):
             predictions[i, action] = 1
             predictions[i, 3] = action + 1
     else:
-        raise Exception('level-k not implemented for k={}'.format(k))    
+        raise Exception('level-k not implemented for k={}'.format(k))
 
     if not subfunc:
         if not k == 0:
@@ -371,13 +378,13 @@ def level_k(features, k, subfunc=False):
 
 # Machine learning
 def machine_learn(features, model, n_splits=5):
-    """Pure machine learning 
-    
+    """Pure machine learning
+
     Args:
         features (250x18 np-array of ints): Games
         model (string): ML model descriptor
         n_splits (int, optional): Number of folds for x-validation
-    
+
     Returns:
         y_predict (250x4 np-array of floats): (f1, f2, f3, Action)
     """
@@ -397,29 +404,29 @@ def machine_learn(features, model, n_splits=5):
 
     avg_freq_dist = np.mean(freq_dist)
     avg_action_accuracy = np.mean(action_accuracy)
-    
+
     Q_results.append(avg_freq_dist)
     A_results.append(avg_action_accuracy)
     descriptors.append('ML {}'.format(model))
     colors.append('b')
-    
+
     print_to_terminal('ML {}'.format(model), avg_freq_dist, avg_action_accuracy)
 
     return y_predict
 
 # Hybrid models
 def hybrid(features, behavior, model, n_splits=5):
-    """Uses behavior model predictions as ML features 
-    
+    """Uses behavior model predictions as ML features
+
     Args:
         features (250x4 np-array of floats): Games
         behavior (string): Behavior descriptor
         model (string): ML model descriptor
         n_splits (int, optional): Number of folds for x-validation
-    
+
     Returns:
         y_predict (250x4 np-array of floats): (f1, f2, f3, Action)
-    
+
     Raises:
         Exception: Unknown behavior
     """
@@ -513,3 +520,7 @@ if __name__ == "__main__":
     winner = np.argmax(A_results)
     print('The winning model is: {} with Q = {:.3f} and A = {:.3f}.'.format(descriptors[winner], Q_results[winner], A_results[winner]))
     plot(Q_results, A_results, descriptors, winner, colors)
+
+    # Save results as CSV
+    results_df = pd.DataFrame({'model': descriptors, 'Q': Q_results, 'A': A_results})
+    results_df.to_csv('performance_results.csv')
