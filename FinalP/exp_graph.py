@@ -43,9 +43,14 @@ no_nodes = graph_size
 
 #### SIMPLE EXAMPLE GRAPH #####################################################
 
-no_nodes = 4
-exp_graph = [[[1, 4], [2, 7]], [[2, 1], [0, 4], [3, 9]], [[1, 1], [0, 7]], [[1, 9]]]
-exp_node_weights = [[1, 8], [1, 1], [9, 11], [20, 2]]
+no_nodes = 4 # number of nodes
+# adjacency list
+# format: [neighbor, edge weight]
+exp_graph = [[[1, 4], [2, 7]],
+             [[2, 1], [0, 4], [3, 9]],
+             [[1, 1], [0, 7]],
+             [[1, 9]]]
+exp_node_weights = [[1, 8], [1, 1], [9, 11], [20, 2]]  # [cost, value]
 
 ###############################################################################
 
@@ -54,7 +59,7 @@ exp_node_weights = [[1, 8], [1, 1], [9, 11], [20, 2]]
 #### BRUTE FORCE ALL COMBINATIONS #############################################
 def combinations(start, prev_cost, prev_value, prev_nodes):
     """Bottom up DP calculation of values and costs for all 2**n-1 node combinations
-    
+
     Args:
         start (int): Description
         prev_cost (int): Description
@@ -97,7 +102,7 @@ print(winners[0][0])
 #### GREEDY NODE QUALITY ######################################################
 budget = math.inf # example budget
 
-# sort nodes by their quality, which is their own value plus the sum of the values of all connecting edges 
+# sort nodes by their quality, which is their own value plus the sum of the values of all connecting edges
 node_qualities = []
 for node in range(no_nodes):
     node_value = exp_node_weights[node][1] - exp_node_weights[node][0]
@@ -144,16 +149,16 @@ print(value)
 #### GREEDY MAXIMUM SPANNING TREE #############################################
 def prim_MST(s):
     """Runs Prim's algorithm to find a maximum spanning tree (MST).
-    
+
     Four modifications to standard minimum spanning tree:
         1) Edge weights are negated to go from minimum to maximum ST
         2) Node value is added to edge weight for consideration of candidate edges
         3) The value of the MST is not its length but the sum of all node values plus the sum of all edge values of edges between those nodes, including edges that are additional to the spanning tree
         4) The algorithm terminates if there are only nodes left that would have a negative impact on the current solution, i.e., infer a cost. Such termination might be preliminary, since addition of future (bad) nodes might be worthwhile due to complementarity effects.
-    
+
     Args:
         s (int): Index of starting node
-    
+
     Returns:
         tuple (set, int): ({node IDs in MST}, value of MST)
     """
