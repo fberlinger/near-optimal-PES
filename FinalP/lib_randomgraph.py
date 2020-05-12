@@ -80,6 +80,11 @@ class RandomGraph():
 
         return benefit
 
+    def within_budget(self, budget):
+        """ returns True/False of whether graph is within the budget """
+        cost = self.get_set_cost()
+        return budget <= cost
+
     def generate_Gnp(self, n, p):
         """Gnp graph
 

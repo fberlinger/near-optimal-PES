@@ -45,7 +45,7 @@ budget = no_nodes*4 # example budget
 
 
 #### BRUTE FORCE ALL COMBINATIONS #############################################
-def combinations(start, prev_cost, prev_value, prev_nodes):
+def combinations(graph, all_combs, all_costs, all_values, start, prev_cost, prev_value, prev_nodes):
     """Bottom up DP calculation of values and costs for all 2**n-1 node combinations
 
     Args:
@@ -54,45 +54,51 @@ def combinations(start, prev_cost, prev_value, prev_nodes):
         prev_value (int): Description
         prev_nodes (list of int): Description
     """
-    for ii in range(start, no_nodes):
+    for ii in range(start, graph.size):
         # combination
         nodes = prev_nodes + [ii]
         all_combs.append(nodes)
         # cost
-        cost = prev_cost + exp_node_weights[ii][0]
+        cost = prev_cost + graph.node_weights[ii][0]
         all_costs.append(cost)
         # value
-        value = prev_value + exp_node_weights[ii][1] - exp_node_weights[ii][0]
+        value = prev_value + graph.node_weights[ii][1] - graph.node_weights[ii][0]
         for node in prev_nodes: # complementarity
-            for adjacent in exp_graph[node]:
+            for adjacent in graph.graph[node]:
                 if adjacent[0] == ii:
                     value += adjacent[1]
         all_values.append(value)
         # recurse
-        combinations(ii+1, cost, value, nodes)
+        combinations(graph, all_combs, all_costs, all_values, ii+1, cost, value, nodes)
 
-all_combs = []
-all_costs = []
-all_values = []
-combinations(0, 0, 0, [])
+def get_best_combination(graph, budget):
+    all_combs = []
+    all_costs = []
+    all_values = []
+    combinations(graph, all_combs, all_costs, all_values, 0, 0, 0, [])
 
-#print(all_combs)
-#print(all_costs)
-#print(all_values)
+    #print(all_combs)
+    #print(all_costs)
+    #print(all_values)
 
-# find first winner that fits budget
-winners = sorted(((val, ind) for ind, val in enumerate(all_values)), reverse=True)
-print('\ncombinations')
-#print(all_combs[winners[0][1]])
-#print(winners[0][0])
+    # find first winner that fits budget
+    winners = sorted(((val, ind) for ind, val in enumerate(all_values)), reverse=True)
+    print('\ncombinations')
+    print('{} winners'.format(len(winners)))
+    #print(all_combs[winners[0][1]])
+    #print(winners[0][0])
 
-for winner in winners:
-    cost = all_costs[winner[1]]
-    if cost <= budget:
-        print(all_combs[winner[1]])
-        print(winner[0])
-        break
+    for winner in winners:
+        cost = all_costs[winner[1]]
+        if cost <= budget:
+            print(all_combs[winner[1]])
+            print(winner[0])
+            break
 ###############################################################################
+
+graph = RandomGraph('Gnp', 4, edge_spec=.5, seed=42)
+budget = 100
+get_best_combination(graph, budget)
 
 
 
