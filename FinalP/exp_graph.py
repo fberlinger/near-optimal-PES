@@ -29,7 +29,6 @@ budget = graph_size*2 # example budget
 
 #### SIMPLE EXAMPLE GRAPH #####################################################
 
-<<<<<<< HEAD
 no_nodes = 4 # number of nodes
 # adjacency list
 # format: [neighbor, edge weight]
@@ -38,13 +37,8 @@ exp_graph = [[[1, 4], [2, 7]],
              [[1, 1], [0, 7]],
              [[1, 9]]]
 exp_node_weights = [[1, 8], [1, 1], [9, 11], [20, 2]]  # [cost, value]
-=======
-no_nodes = 4
-exp_graph = [[[1, 4], [2, 7]], [[2, 1], [0, 4], [3, 9]], [[1, 1], [0, 7]], [[1, 9]]]
-exp_node_weights = [[1, 8], [1, 1], [9, 11], [3, 2]]
 
 budget = no_nodes*4 # example budget
->>>>>>> 642ec97851fe6a7dedec60f7647b5b9815b8c3d6
 
 ###############################################################################
 
