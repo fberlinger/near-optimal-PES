@@ -1,20 +1,4 @@
 """Experiments on algorithms that find good PES solutions for graph representations of the problem.
-
-Attributes:
-    all_combs (list): Description
-    all_costs (list): Description
-    all_values (list): Description
-    best_ind (TYPE): Description
-    best_val (TYPE): Description
-    exp_graph (TYPE): Description
-    exp_node_weights (TYPE): Description
-    G (TYPE): Description
-    graph_size (int): Description
-    graph_type (str): Description
-    inf (int): Description
-    no_edges (int): Description
-    no_nodes (TYPE): Description
-    winners (TYPE): Description
 """
 import math
 import random
@@ -28,14 +12,16 @@ from lib_heap import Heap
 #### RANDOM GRAPH #############################################################
 '''
 graph_type = 'Gnm'
-graph_size = 4 # n
-no_edges = 4 # m
+graph_size = 20 # n
+no_edges = 15 # m
 G = RandomGraph(graph_type, graph_size, no_edges)
 #print(G.graph)
 #print(G.node_weights)
 exp_graph = G.graph
 exp_node_weights = G.node_weights
 no_nodes = graph_size
+
+budget = graph_size*2 # example budget
 '''
 ###############################################################################
 
@@ -45,7 +31,9 @@ no_nodes = graph_size
 
 no_nodes = 4
 exp_graph = [[[1, 4], [2, 7]], [[2, 1], [0, 4], [3, 9]], [[1, 1], [0, 7]], [[1, 9]]]
-exp_node_weights = [[1, 8], [1, 1], [9, 11], [20, 2]]
+exp_node_weights = [[1, 8], [1, 1], [9, 11], [3, 2]]
+
+budget = no_nodes*4 # example budget
 
 ###############################################################################
 
@@ -86,17 +74,24 @@ combinations(0, 0, 0, [])
 #print(all_combs)
 #print(all_costs)
 #print(all_values)
+
+# find first winner that fits budget
 winners = sorted(((val, ind) for ind, val in enumerate(all_values)), reverse=True)
 print('\ncombinations')
-print(all_combs[winners[0][1]])
-print(winners[0][0])
+#print(all_combs[winners[0][1]])
+#print(winners[0][0])
+
+for winner in winners:
+    cost = all_costs[winner[1]]
+    if cost <= budget:
+        print(all_combs[winner[1]])
+        print(winner[0])
+        break
 ###############################################################################
 
 
 
 #### GREEDY NODE QUALITY ######################################################
-budget = math.inf # example budget
-
 # sort nodes by their quality, which is their own value plus the sum of the values of all connecting edges 
 node_qualities = []
 for node in range(no_nodes):
@@ -159,29 +154,40 @@ def prim_MST(s):
     """
     val_s = -exp_node_weights[s][1] + exp_node_weights[s][0] # value of starting node
     value = 0 # MST value
+    cost = 0 # MST cost
     compensation = 0 # compensation for edges that are counted twice
 
     prev = [0]*no_nodes
     dist = [math.inf]*no_nodes
     S = set()
     H = Heap(no_nodes)
-    H.insert(s, val_s)
+    H.insert(s, val_s, 0)
     dist[s] = val_s
 
     for v in range(no_nodes):
-        H.insert(v, math.inf)
+        H.insert(v, math.inf, 0)
 
     while H.size > 0:
         v = H.delete_min()
         if v[1] > 0: # min in Heap is of positive value, i.e., a cost, abort
             break
 
-        for node in S: # complementarity
+        # abort if out of budget
+        cost += exp_node_weights[v[0]][0]
+        if cost > budget:
+            #print(value, compensation)
+            MST_value = -(value-compensation)
+            return (S, MST_value)
+
+        # complementarity
+        for node in S:
             for adjacent in exp_graph[node]:
                 if adjacent[0] == v[0]:
                     value -= adjacent[1]
-        value += v[1]
+        
         S.add(v[0])
+        value += v[1]
+        compensation += v[2] # necessary since edge weight was added to node quality already
 
         for w in exp_graph[v[0]]:
             if not w[0] in S:
@@ -190,9 +196,9 @@ def prim_MST(s):
                     if d > 0: # bad/costly node
                         continue
                     dist[w[0]] = d
-                    compensation -= w[1]
+                    comp = -w[1]
                     prev[w[0]] = v[0]
-                    H.decrease_key(w[0],dist[w[0]])
+                    H.decrease_key(w[0], dist[w[0]], comp)
 
     MST_value = -(value-compensation)
     return (S, MST_value)

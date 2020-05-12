@@ -45,7 +45,7 @@ class Heap():
             self.pos[self.heap[N][0]] = N # heap position
             self.min_heapify(smallest)
 
-    def insert(self, obj, value):
+    def insert(self, obj, value, comp):
         """Inserts a new vertex/value pair into the heap as a leaf and promotes it upwards until larger than its parent
         
         Args:
@@ -54,7 +54,7 @@ class Heap():
             pos (int): location on graph of agent
         """
         # add obj/value pair as a leaf, increment heap size
-        self.heap.append([obj, value])
+        self.heap.append([obj, value, comp])
         self.size += 1
 
         # promote new pair upwards until larger than parent (swap!)
@@ -67,7 +67,7 @@ class Heap():
             N = int(math.floor((N-1)/2))
         self.pos[obj] = N # heap position
 
-    def decrease_key(self, obj, value):
+    def decrease_key(self, obj, value, comp):
         """Update the value of a vertex and promote upwards until larger than its parent
         
         Args:
@@ -76,6 +76,7 @@ class Heap():
         """
         N = self.pos[obj]
         self.heap[N][1] = value
+        self.heap[N][2] = comp
         
         # promote new pair upwards until larger than parent (swap!)
         while N != 0 and self.heap[int(math.floor((N-1)/2))][1] > value:
