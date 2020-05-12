@@ -12,7 +12,7 @@ class RandomGraph():
         graph (list of lists): Represents the graph in adjecency list format
     """
 
-    def __init__(self, graph_type, graph_size, edge_spec=0):
+    def __init__(self, graph_type, graph_size, edge_spec=0, seed=None):
         """Generates graph
 
         Args:
@@ -20,6 +20,8 @@ class RandomGraph():
             graph_size (int): Number of nodes n
             edge_spec (float): Edge probability p or number of edges m
         """
+        if seed is not None:
+            random.seed(seed)
         self.graph_type = graph_type
         self.edge_spec = edge_spec
         self.size = graph_size
@@ -53,11 +55,11 @@ class RandomGraph():
 
         cost = 0
         for v in nodes:
-            cost += graph[v][0]
+            cost += self.node_weights[v][0]
 
         return cost
 
-    def get_set_benefit(self):
+    def get_set_benefit(self, nodes):
         """ for a set of nodes, compute the total benefit
         (sum of benefits of node, plus complementarity of edges) """
 
@@ -65,12 +67,12 @@ class RandomGraph():
 
         # add cost/benefit of nodes
         for v in nodes:
-            benefit += graph[v][1]
+            benefit += self.node_weights[v][1]
 
         # add benefit of edges
         edge_benefit = 0
         for v in nodes:
-            for adj, weight in graph.graph[v]:
+            for adj, weight in self.graph[v]:
                 if adj in nodes:
                     edge_benefit += weight
 
