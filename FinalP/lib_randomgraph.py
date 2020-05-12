@@ -24,7 +24,7 @@ class RandomGraph():
         self.edge_spec = edge_spec
         self.size = graph_size
         self.graph = [[] for n in range(graph_size)] # adjacency list
-        self.node_weights = [[random.randint(0, 10), random.randint(0, 10)] for n in range(graph_size)] # cost, benefit
+        self.node_weights = [[random.randint(2, 6), random.randint(4, 10)] for n in range(graph_size)] # cost, benefit
         self.edges = 0
         if graph_type == 'Gnp':
             self.generate_Gnp(graph_size, edge_spec)
