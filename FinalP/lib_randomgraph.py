@@ -6,20 +6,23 @@ import random
 class RandomGraph():
     """
     Class for Gnp and Gnm random graphs as well as grid graphs
-    
+
     Attributes:
         edges (int): Counts the number of edges in the graph
         graph (list of lists): Represents the graph in adjecency list format
     """
-    
+
     def __init__(self, graph_type, graph_size, edge_spec=0):
         """Generates graph
-        
+
         Args:
             graph_type (string): Gnp or Gnm graph
             graph_size (int): Number of nodes n
             edge_spec (float): Edge probability p or number of edges m
         """
+        self.graph_type = graph_type
+        self.edge_spec = edge_spec
+        self.size = graph_size
         self.graph = [[] for n in range(graph_size)] # adjacency list
         self.node_weights = [[random.randint(0, 10), random.randint(0, 10)] for n in range(graph_size)] # cost, benefit
         self.edges = 0
@@ -32,9 +35,52 @@ class RandomGraph():
         else:
             print('Invalid graph type. Choose from Gnp and Gnm.')
 
+    def __str__(self):
+        out = 'graph type = {}, n = {}'.format(self.graph_type, len(self.graph))
+        if self.graph_type == 'Gnp':
+            out += ', p = {}'.format(self.edge_spec)
+        elif self.graph_type == 'Gnm':
+            out += ', m = {}'.format(self.edge_spec)
+        out += '\n'
+        out += 'graph: ' + str(self.graph) + '\n'
+        out += 'node_weights: ' + str(self.node_weights) + '\n'
+        out += 'edges: {}'.format(self.edges)
+        return out
+
+    def get_set_cost(self, nodes):
+        """ for a set of nodes, compute the total cost
+        (sum of cost of nodes) """
+
+        cost = 0
+        for v in nodes:
+            cost += graph[v][0]
+
+        return cost
+
+    def get_set_benefit(self):
+        """ for a set of nodes, compute the total benefit
+        (sum of benefits of node, plus complementarity of edges) """
+
+        benefit = 0
+
+        # add cost/benefit of nodes
+        for v in nodes:
+            benefit += graph[v][1]
+
+        # add benefit of edges
+        edge_benefit = 0
+        for v in nodes:
+            for adj, weight in graph.graph[v]:
+                if adj in nodes:
+                    edge_benefit += weight
+
+        benefit += edge_benefit / 2   # edges are double counted
+
+        return benefit
+
     def generate_Gnp(self, n, p):
         """Gnp graph
-        
+
         Args:
             n (int): Number of nodes
             p (float): Edge probability
@@ -49,13 +95,13 @@ class RandomGraph():
 
     def generate_Gnm(self, n, m):
         """Gnm graph
-        
+
         Args:
             n (int): Number of nodes
             m (int): Number of edges
         """
-        def extract(lst): 
-            return [item[0] for item in lst] 
+        def extract(lst):
+            return [item[0] for item in lst]
 
         while self.edges < m: # add edges until graph complete
             while True: # sample until new edge
@@ -69,7 +115,7 @@ class RandomGraph():
 
     def generate_grid(self, n):
         """Regular grid graph
-        
+
         Args:
             n (int): Number of nodes
         """
