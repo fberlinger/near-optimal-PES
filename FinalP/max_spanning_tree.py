@@ -5,10 +5,10 @@ from lib_randomgraph import RandomGraph
 from lib_heap import Heap
 
 def main():
-    graph = RandomGraph('Gnp', 4, edge_spec=.5, seed=42)
+    graph = RandomGraph('Gnp', 20, edge_spec=.5)
 
     print(graph)
-    budget = 100
+    budget = 40
     nodes, value = spanning_tree(graph, budget)
     print('selected nodes ', nodes)
     print('total value    ', value)
@@ -34,7 +34,6 @@ def prim_MST(graph, budget, node_set):
     val_s = -graph.node_weights[s][1] + graph.node_weights[s][0] # value of starting node
     value = 0 # MST value
     cost = 0 # MST cost
-    add_cost = 0
     compensation = 0 # compensation for edges that are counted twice
 
     prev = [0]*graph.size
@@ -55,9 +54,8 @@ def prim_MST(graph, budget, node_set):
         # abort if out of budget
         cost += graph.node_weights[v[0]][0]
         if cost > budget:
-            #print(value, compensation)
             MST_value = -(value-compensation)
-            return (S, MST_value)
+            return (S, MST_value, cost-graph.node_weights[v[0]][0])
 
         # complementarity
         for node in S:
@@ -82,8 +80,8 @@ def prim_MST(graph, budget, node_set):
 
     MST_value = -(value-compensation)
     del H
-    print('return', S, MST_value, cost, add_cost)
-    return (S, MST_value, cost, add_cost)
+    print('return', S, MST_value, cost)
+    return (S, MST_value, cost)
 
 def spanning_tree(graph, budget):
     remaining_budget = budget
@@ -93,7 +91,7 @@ def spanning_tree(graph, budget):
     add_cost = 0
 
     while node_set and remaining_budget > 6:
-        MST_nodes, MST_value, MST_cost, add_cost = prim_MST(graph, budget, node_set)
+        MST_nodes, MST_value, MST_cost = prim_MST(graph, budget, node_set)
         value += MST_value
         nodes.update(MST_nodes)
         node_set -= MST_nodes
