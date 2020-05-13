@@ -12,9 +12,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def get_values(combo):
+def get_values(budget, combo):
     cost = graph.get_set_cost(combo)
     benefit = graph.get_set_benefit(combo)
+    graph.check_set_valid(combo, budget)
     print('combination: {}'.format(combo))
     print('cost:    {}'.format(cost))
     print('benefit: {}'.format(benefit))
@@ -52,33 +53,33 @@ for i in range(num_repeats):
     print('---------------------------')
     print('best combination')
     opt_combo, opt_value = get_best_combination(graph, budget)
-    opt_costs[i], opt_benefits[i], opt_values[i] = get_values(opt_combo)
+    opt_costs[i], opt_benefits[i], opt_values[i] = get_values(budget, opt_combo)
 
     print('---------------------------')
     print('naive flatrate')
     flatrate = budget / graph.size
     flatrate_combo = naive_flatrate(graph, budget, flatrate)
-    flatrate_costs[i], flatrate_benefits[i], flatrate_values[i] = get_values(flatrate_combo)
+    flatrate_costs[i], flatrate_benefits[i], flatrate_values[i] = get_values(budget, flatrate_combo)
 
     print('---------------------------')
     print('greedy node')
     greedy_combo, greedy_value = greedy_node(graph, budget)
-    greedy_costs[i], greedy_benefits[i], greedy_values[i] = get_values(greedy_combo)
+    greedy_costs[i], greedy_benefits[i], greedy_values[i] = get_values(budget, greedy_combo)
 
     print('---------------------------')
     print('spanning tree')
     spanning_combo, spanning_value = spanning_tree(graph, budget)
-    spanning_costs[i], spanning_benefits[i], spanning_values[i] = get_values(spanning_combo)
+    spanning_costs[i], spanning_benefits[i], spanning_values[i] = get_values(budget, spanning_combo)
 
     print('---------------------------')
     print('max connected component')
     cc_combo = max_component(graph, budget)
-    cc_costs[i], cc_benefits[i], cc_values[i] = get_values(cc_combo)
+    cc_costs[i], cc_benefits[i], cc_values[i] = get_values(budget, cc_combo)
 
     print('---------------------------')
     print('bellman-ford')
     bf_combo = select_bellman_ford(graph, budget)
-    bf_costs[i], bf_benefits[i], bf_values[i] = get_values(bf_combo)
+    bf_costs[i], bf_benefits[i], bf_values[i] = get_values(budget, bf_combo)
 
 
 # display bar graph
