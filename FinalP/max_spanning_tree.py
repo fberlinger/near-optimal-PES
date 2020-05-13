@@ -80,7 +80,7 @@ def prim_MST(graph, budget, node_set):
 
     MST_value = -(value-compensation)
     del H
-    # print('return', S, MST_value, cost)
+    print('return', S, MST_value, cost)
     return (S, MST_value, cost)
 
 def spanning_tree(graph, budget):
@@ -89,6 +89,9 @@ def spanning_tree(graph, budget):
     nodes = set()
     node_set = set(range(graph.size))
 
+    # 6 because currently max cost of a node
+    # Florian: imagine you have less than that money left but still nodes
+    # that cost more than that. you would never terminate
     while node_set and remaining_budget > 6:
         MST_nodes, MST_value, MST_cost = prim_MST(graph, remaining_budget, node_set)
         value += MST_value
@@ -96,7 +99,7 @@ def spanning_tree(graph, budget):
         node_set -= MST_nodes
         remaining_budget -= MST_cost
 
-        if len(node_set) == 0:
+        if len(MST_nodes) == 0:
             break
 
     return (nodes, value)
