@@ -22,7 +22,7 @@ def get_values(combo):
     return cost, benefit, benefit-cost
 
 
-num_repeats = 3
+num_repeats = 5
 opt_values      = np.zeros(num_repeats)
 flatrate_values = np.zeros(num_repeats)
 greedy_values   = np.zeros(num_repeats)
@@ -31,8 +31,8 @@ cc_values       = np.zeros(num_repeats)
 bf_values       = np.zeros(num_repeats)
 
 for i in range(num_repeats):
-    budget = 10
-    graph = RandomGraph('Gnp', 4, edge_spec=.5, seed=None)
+    budget = 30
+    graph = RandomGraph('Gnp', 10, edge_spec=.5, seed=None)
     print(graph)
 
 
@@ -52,17 +52,15 @@ for i in range(num_repeats):
     greedy_combo, greedy_value = greedy_node(graph, budget)
     greedy_cost, greedy_benefit, greedy_values[i] = get_values(greedy_combo)
 
-    # print('---------------------------')
-    # print('spanning tree')
-    # spanning_combo, spanning_value = spanning_tree(graph, budget)
-    # spanning_cost, spanning_benefit, spanning_values[i] = get_values(spanning_combo)
-
+    print('---------------------------')
+    print('spanning tree')
+    spanning_combo, spanning_value = spanning_tree(graph, budget)
+    spanning_cost, spanning_benefit, spanning_values[i] = get_values(spanning_combo)
 
     print('---------------------------')
     print('max connected component')
     cc_combo = max_component(graph, budget)
     cc_cost, cc_benefit, cc_values[i] = get_values(cc_combo)
-
 
     print('---------------------------')
     print('bellman-ford')
@@ -74,7 +72,7 @@ for i in range(num_repeats):
 display = [('best combo', opt_values),
            ('naive flatrate', flatrate_values),
            ('greedy node', greedy_values),
-           # ('MST', spanning_values),
+           ('MST', spanning_values),
            ('max CC', cc_values),
            ('bellman-ford', bf_values)]
 
@@ -82,7 +80,8 @@ plt.figure()
 values = [entry[1].mean() for entry in display]
 X = np.arange(len(display))
 plt.bar(X, values, yerr=[entry[1].std() for entry in display])
-plt.xticks(X, [entry[0] for entry in display])
+plt.xticks(X, [entry[0] for entry in display], rotation=30)
 plt.ylabel('Value')
 plt.xlabel('Method')
+plt.tight_layout()
 plt.show()
