@@ -1,4 +1,5 @@
 from lib_randomgraph import RandomGraph
+import numpy as np
 
 def main():
     graph = RandomGraph('Gnp', 4, edge_spec=.5, seed=42)
@@ -9,15 +10,14 @@ def main():
     print('predecessor ', pred)
 
 
-
 def bellman_ford(graph, s, budget):
     """ compute shortest paths from a single node, in terms of cost
     negative weight edges ok
 
-    v - source vertex """
+    s - source vertex """
 
-    dist = {}   # distance from v
-    pred = {}       # predecessor
+    dist = {}   # distance from s
+    pred = {}   # predecessor
 
     # initialize graph
     for v in range(graph.size):
@@ -40,6 +40,27 @@ def bellman_ford(graph, s, budget):
 
     return dist, pred
 
+
+def select_bellman_ford(graph, budget):
+    # start with highest value node
+    node_values = graph.get_node_values()
+    node_costs = graph.get_node_costs()
+    max_val = np.argsort(node_values)[-1]
+    dist, pred = bellman_ford(graph, max_val, budget)
+
+    selected = set()
+    remaining_budget = budget
+    smallest_dist = np.argsort([dist[v] for v in np.arange(graph.size)])
+    # print('dist', dist)
+    # print('smallest', smallest_dist)
+    
+    # iterate from smallest-cost node through remaining nodes until budget is full
+    for min_idx in smallest_dist:
+        if remaining_budget >= node_costs[min_idx]:
+            selected.add(min_idx)
+            remaining_budget -= node_costs[min_idx]
+
+    return selected
 
 if __name__ == '__main__':
     main()

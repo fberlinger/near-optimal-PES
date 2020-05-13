@@ -52,6 +52,15 @@ class RandomGraph():
         out += '\n'
         return out
 
+    def get_node_costs(self):
+        return [self.node_weights[i][0] for i in range(self.size)]
+
+    def get_node_benefits(self):
+        return [self.node_weights[i][1] for i in range(self.size)]
+
+    def get_node_values(self):
+        return [self.node_weights[i][1] - self.node_weights[i][0] for i in range(self.size)]
+
     def get_set_cost(self, nodes):
         """ for a set of nodes, compute the total cost
         (sum of cost of nodes) """
