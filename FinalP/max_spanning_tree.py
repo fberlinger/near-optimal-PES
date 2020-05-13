@@ -68,16 +68,16 @@ def prim_MST(graph, budget, node_set):
         value += v[1]
         compensation += v[2] # necessary since edge weight was added to node quality already
 
-        for w in graph.graph[v[0]]:
-            if not w[0] in S:
-                if dist[w[0]] > w[1]:
-                    d = -w[1] - graph.node_weights[w[0]][1] + graph.node_weights[w[0]][0] # negate for maximum spanning tree
+        for adj, weight in graph.graph[v[0]]:
+            if not adj in S:
+                if dist[adj] > weight:
+                    d = -weight - graph.node_weights[adj][1] + graph.node_weights[adj][0] # negate for maximum spanning tree
                     if d > 0: # bad/costly node
                         continue
-                    dist[w[0]] = d
-                    comp = -w[1]
-                    prev[w[0]] = v[0]
-                    H.decrease_key(w[0], dist[w[0]], comp)
+                    dist[adj] = d
+                    comp = -weight
+                    prev[adj] = v[0]
+                    H.decrease_key(adj, dist[weight], comp)
 
     MST_value = -(value-compensation)
     del H
