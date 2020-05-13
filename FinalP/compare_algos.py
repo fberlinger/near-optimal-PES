@@ -139,7 +139,7 @@ def vary_budget():
     budgets     = [20, 25, 30, 40, 50]
     num_nodes   = 15
     edge_spec   = .3
-    num_repeats = 10
+    num_repeats = 30
 
     opt_values      = np.zeros((len(budgets), num_repeats))
     flatrate_values = np.zeros((len(budgets), num_repeats))
@@ -148,6 +148,7 @@ def vary_budget():
     cc_values       = np.zeros((len(budgets), num_repeats))
     bf_values       = np.zeros((len(budgets), num_repeats))
 
+    np.random.seed(42)
     seeds = np.random.random(num_repeats)
 
     for i in range(num_repeats):
@@ -155,52 +156,52 @@ def vary_budget():
         print('\n\n', graph)
         for b, budget in enumerate(budgets):
 
-            print('---------------------------')
-            print('best combination')
+            # print('---------------------------')
+            # print('best combination')
             opt_combo, opt_value = get_best_combination(graph, budget)
             _, _, opt_values[b][i] = get_values(graph, budget, opt_combo)
 
-            print('---------------------------')
-            print('naive flat rate')
+            # print('---------------------------')
+            # print('naive flat rate')
             # flatrate = budget / graph.size * 8
             flatrate = 4
             flatrate_combo = naive_flatrate(graph, budget, flatrate)
             _, _, flatrate_values[b][i] = get_values(graph, budget, flatrate_combo)
 
-            print('---------------------------')
-            print('greedy node')
+            # print('---------------------------')
+            # print('greedy node')
             greedy_combo, greedy_value = greedy_node(graph, budget)
             _, _, greedy_values[b][i] = get_values(graph, budget, greedy_combo)
 
-            print('---------------------------')
-            print('spanning tree')
+            # print('---------------------------')
+            # print('spanning tree')
             spanning_combo, spanning_value = spanning_tree(graph, budget)
             _, _, spanning_values[b][i] = get_values(graph, budget, spanning_combo)
 
-            print('---------------------------')
-            print('max connected component')
+            # print('---------------------------')
+            # print('max connected component')
             cc_combo = max_component(graph, budget)
             _, _, cc_values[b][i] = get_values(graph, budget, cc_combo)
 
-            print('---------------------------')
-            print('bellman-ford')
+            # print('---------------------------')
+            # print('bellman-ford')
             bf_combo = select_bellman_ford(graph, budget)
             _, _, bf_values[b][i] = get_values(graph, budget, bf_combo)
 
-    print(opt_values)
-    print(flatrate_values)
-    print(greedy_values)
-    print(spanning_values)
-    print(cc_values)
-    print(bf_values)
+    # print(opt_values)
+    # print(flatrate_values)
+    # print(greedy_values)
+    # print(spanning_values)
+    # print(cc_values)
+    # print(bf_values)
 
     plt.figure()
-    plt.errorbar(budgets, opt_values.sum(axis=1), yerr=None, label='optimal', ecolor='black', elinewidth=.5, color='forestgreen')
-    plt.errorbar(budgets, flatrate_values.sum(axis=1), yerr=flatrate_values.std(axis=1), label='naive flat rate', ecolor='black', elinewidth=.5, color='gold')
-    plt.errorbar(budgets, greedy_values.sum(axis=1), yerr=greedy_values.std(axis=1), label='greedy node', ecolor='black', elinewidth=.5, color='red')
-    plt.errorbar(budgets, spanning_values.sum(axis=1), yerr=spanning_values.std(axis=1), label='MST', ecolor='black', elinewidth=.5, color='royalblue')
-    plt.errorbar(budgets, cc_values.sum(axis=1), yerr=cc_values.std(axis=1), label='max CC', ecolor='black', elinewidth=.5, color='darkturquoise')
-    plt.errorbar(budgets, bf_values.sum(axis=1), yerr=bf_values.std(axis=1), label='bellman-ford', ecolor='black', elinewidth=.5, color='darkviolet')
+    plt.errorbar(budgets, opt_values.mean(axis=1), yerr=None, label='optimal', ecolor='black', elinewidth=.5, color='forestgreen')
+    plt.errorbar(budgets, flatrate_values.mean(axis=1), yerr=flatrate_values.std(axis=1), label='naive flat rate', ecolor='black', elinewidth=.5, color='gold')
+    plt.errorbar(budgets, greedy_values.mean(axis=1), yerr=greedy_values.std(axis=1), label='greedy node', ecolor='black', elinewidth=.5, color='red')
+    plt.errorbar(budgets, spanning_values.mean(axis=1), yerr=spanning_values.std(axis=1), label='MST', ecolor='black', elinewidth=.5, color='royalblue')
+    plt.errorbar(budgets, cc_values.mean(axis=1), yerr=cc_values.std(axis=1), label='max CC', ecolor='black', elinewidth=.5, color='darkturquoise')
+    plt.errorbar(budgets, bf_values.mean(axis=1), yerr=bf_values.std(axis=1), label='bellman-ford', ecolor='black', elinewidth=.5, color='darkviolet')
     plt.legend()
     plt.xlabel('Budget')
     plt.ylabel('Average value')
