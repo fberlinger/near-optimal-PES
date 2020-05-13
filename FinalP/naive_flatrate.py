@@ -41,6 +41,16 @@ def naive_flatrate(graph, budget, flatrate):
             cost += flatrate
             value += node_value
 
+
+    # complementarity values
+    comp = 0
+    for node in nodes:
+        for adjacent in graph.graph[node]:
+            if adjacent[0] in nodes:
+                comp += adjacent[1]
+    comp /= 2 # counted each edge twice
+    value += comp
+
     return (nodes, value)
 
 if __name__ == '__main__':
