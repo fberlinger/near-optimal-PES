@@ -90,7 +90,7 @@ def spanning_tree(graph, budget):
     node_set = set(range(graph.size))
 
     while node_set and remaining_budget > 6:
-        MST_nodes, MST_value, MST_cost = prim_MST(graph, budget, node_set)
+        MST_nodes, MST_value, MST_cost = prim_MST(graph, remaining_budget, node_set)
         value += MST_value
         nodes.update(MST_nodes)
         node_set -= MST_nodes
