@@ -23,7 +23,7 @@ def get_values(budget, combo):
     return cost, benefit, benefit-cost
 
 
-num_repeats = 1
+num_repeats = 5
 opt_costs      = np.zeros(num_repeats)
 flatrate_costs = np.zeros(num_repeats)
 greedy_costs   = np.zeros(num_repeats)
@@ -47,7 +47,7 @@ bf_values       = np.zeros(num_repeats)
 
 for i in range(num_repeats):
     budget = 20
-    graph = RandomGraph('Gnp', 15, edge_spec=.5, seed=0)
+    graph = RandomGraph('Gnp', 15, edge_spec=.5, seed=None)
     print('\n\n', graph)
 
     print('---------------------------')
@@ -93,32 +93,35 @@ display = [('best combo', opt_costs.mean(), opt_benefits.mean(), opt_values.mean
 
 # import sys
 # sys.exit(0)
-plt.figure()
-values = [entry[1].mean() for entry in display]
-X = np.arange(len(display))
-plt.bar(X, values, yerr=[entry[1].std() for entry in display], color='red')
-plt.xticks(X, [entry[0] for entry in display], rotation=30)
-plt.ylabel('Cost')
-plt.xlabel('Method')
-plt.tight_layout()
-plt.show()
+# plt.figure()
+# values = [entry[1].mean() for entry in display]
+# X = np.arange(len(display))
+# plt.bar(X, values, yerr=[entry[1].std() for entry in display], color='red')
+# plt.xticks(X, [entry[0] for entry in display], rotation=30)
+# plt.ylabel('Cost')
+# plt.xlabel('Method')
+# plt.tight_layout()
+# plt.show()
+#
+# plt.figure()
+# values = [entry[2].mean() for entry in display]
+# X = np.arange(len(display))
+# plt.bar(X, values, yerr=[entry[2].std() for entry in display], color='green')
+# plt.xticks(X, [entry[0] for entry in display], rotation=30)
+# plt.ylabel('Benefit')
+# plt.xlabel('Method')
+# plt.tight_layout()
+# plt.show()
+
+# normalize by percentage of optimal achieved
+values = [100 * (entry[3] / display[0][3]).mean() for entry in display]
+stdev =  [100 * (entry[3] / display[0][3]).std() for entry in display]
 
 plt.figure()
-values = [entry[2].mean() for entry in display]
 X = np.arange(len(display))
-plt.bar(X, values, yerr=[entry[2].std() for entry in display], color='green')
+plt.bar(X, values, yerr=stdev, color='Blue')
 plt.xticks(X, [entry[0] for entry in display], rotation=30)
-plt.ylabel('Benefit')
-plt.xlabel('Method')
-plt.tight_layout()
-plt.show()
-
-plt.figure()
-values = [entry[3].mean() for entry in display]
-X = np.arange(len(display))
-plt.bar(X, values, yerr=[entry[3].std() for entry in display], color='Blue')
-plt.xticks(X, [entry[0] for entry in display], rotation=30)
-plt.ylabel('Value')
+plt.ylabel('Value (% of optimal)')
 plt.xlabel('Method')
 plt.tight_layout()
 plt.show()
