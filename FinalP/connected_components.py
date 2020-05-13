@@ -96,6 +96,8 @@ def max_component(graph, budget):
             for i in range(len(components[idx])):
                 subgraph.graph[i] = [[v_to_subgraph[adj], weight] for adj, weight in graph.graph[subgraph_to_v[i]]]
 
+            print(v_to_subgraph[graph.node_weights[subgraph_to_v[i]][0]])
+            print(graph.node_weights[subgraph_to_v[i]][1])
             subgraph.node_weights = [[v_to_subgraph[graph.node_weights[subgraph_to_v[i]][0]], graph.node_weights[subgraph_to_v[i]][1]] for i in range(len(components[idx]))]
 
             # subgraph.edges = 0
