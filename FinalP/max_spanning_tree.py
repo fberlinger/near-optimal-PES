@@ -55,7 +55,11 @@ def prim_MST(graph, budget, node_set):
         cost += graph.node_weights[v[0]][0]
         if cost > budget:
             MST_value = -(value-compensation)
+<<<<<<< HEAD
             return (S, MST_value, cost-graph.node_weights[v[0]][0])
+=======
+            return S, MST_value, cost
+>>>>>>> 77041b159b2779ab66a900763b10fe8262d2f181
 
         # complementarity
         for node in S:
@@ -67,20 +71,23 @@ def prim_MST(graph, budget, node_set):
         value += v[1]
         compensation += v[2] # necessary since edge weight was added to node quality already
 
-        for w in graph.graph[v[0]]:
-            if not w[0] in S:
-                if dist[w[0]] > w[1]:
-                    d = -w[1] - graph.node_weights[w[0]][1] + graph.node_weights[w[0]][0] # negate for maximum spanning tree
+        for adj, weight in graph.graph[v[0]]:
+            if not adj in S:
+                if dist[adj] > weight:
+                    d = -weight - graph.node_weights[adj][1] + graph.node_weights[adj][0] # negate for maximum spanning tree
                     if d > 0: # bad/costly node
                         continue
-                    dist[w[0]] = d
-                    comp = -w[1]
-                    prev[w[0]] = v[0]
-                    H.decrease_key(w[0], dist[w[0]], comp)
+                    dist[adj] = d
+                    comp = -weight
+                    prev[adj] = v[0]
+                    H.decrease_key(adj, dist[weight], comp)
 
     MST_value = -(value-compensation)
     del H
+<<<<<<< HEAD
     print('return', S, MST_value, cost)
+=======
+>>>>>>> 77041b159b2779ab66a900763b10fe8262d2f181
     return (S, MST_value, cost)
 
 def spanning_tree(graph, budget):
@@ -88,7 +95,6 @@ def spanning_tree(graph, budget):
     value = 0
     nodes = set()
     node_set = set(range(graph.size))
-    add_cost = 0
 
     while node_set and remaining_budget > 6:
         MST_nodes, MST_value, MST_cost = prim_MST(graph, budget, node_set)

@@ -49,49 +49,54 @@ def connected_components(graph):
 
         # add all neighbors of this node
         for adj, weight in graph.graph[v]:
-            if adj in not_visited:
+            if adj in not_visited and adj not in q:
                 q.append(adj)
-                not_visited.remove(adj)
         # print(not_visited, q)
         not_visited.discard(v)
+
+    # all items should be in a component
+    assert np.sum([len(component) for component in components]) == graph.size
 
     return components
 
 def max_component(graph, budget):
     components = connected_components(graph)
-    values = []
+
+    # order components in terms of lowest cost/benefit ratio
+    ratios = []
     for i, component in enumerate(components):
         benefit = graph.get_set_benefit(component)
         cost = graph.get_set_cost(component)
-        print('  component {}, {} - {} = {}'.format(i, benefit, cost, benefit-cost))
-        values.append(benefit - cost)
-
-    max_vals = reversed(np.argsort(values))
+        print('  component {}, size {}, {} - {} = {}'.format(i, len(component), benefit, cost, benefit-cost))
+        # values.append(benefit - cost)
+        ratios.append(cost / benefit)
 
     # selected parcels
     selected = set()
     remaining_budget = budget
 
     # use up all our budget
-    for max_idx in max_vals:  # iterate through most valuable parcels
-        set_cost = graph.get_set_cost(components[max_idx])
+    for idx in np.argsort(ratios):  # iterate through most valuable parcels
+        set_cost = graph.get_set_cost(components[idx])
         if set_cost <= remaining_budget:
-            selected.update(components[max_idx])
+            selected.update(components[idx])
             remaining_budget -= set_cost
         else:
             # create map for nodes
-            subgraph_map = {}  # {new_node: old_node}
-            for i in range(len(components[max_idx])):
-                subgraph_map[i] = components[max_idx][i]
+            v_to_subgraph = {}   # {old_node: new_node}
+            subgraph_to_v = {}   # {new_node: old_node}
+            for i in range(len(components[idx])):
+                subgraph_to_v[i] = components[idx][i]
+                v_to_subgraph[components[idx][i]] = i
 
             # compute a MST through this to use up as much as possible
-            subgraph = RandomGraph('manual', len(components[max_idx]))
+            subgraph = RandomGraph('manual', len(components[idx]))
 
             # build adjacency list
-            for i in range(len(components[max_idx])):
-                subgraph.graph[i] += graph.graph[subgraph_map[i]]
+            for i in range(len(components[idx])):
+                subgraph.graph[i] = [[v_to_subgraph[adj], weight] for adj, weight in graph.graph[subgraph_to_v[i]]]
 
-            subgraph.node_weights = [[graph.node_weights[subgraph_map[i]][0], graph.node_weights[subgraph_map[i]][1]] for i in range(len(components[max_idx]))]
+            subgraph.node_weights = [[v_to_subgraph[graph.node_weights[subgraph_to_v[i]][0]], graph.node_weights[subgraph_to_v[i]][1]] for i in range(len(components[idx]))]
 
             # subgraph.edges = 0
 
@@ -99,8 +104,10 @@ def max_component(graph, budget):
 
             # map selected nodes back to real numbers, add to our selected set, and update budget
             for selected_node in sub_nodes:
-                selected.add(subgraph_map[selected_node])
-                remaining_budget -= graph.node_weights[subgraph_map[selected_node]][0]
+                node_cost = graph.node_weights[subgraph_to_v[selected_node]][0]
+                if node_cost <= remaining_budget: # TODO: this shouldn't be necessary; spanning tree should already account for this
+                    selected.add(subgraph_to_v[selected_node])
+                    remaining_budget -= node_cost
 
     return selected
 

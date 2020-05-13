@@ -71,12 +71,15 @@ class RandomGraph():
 
         return cost
 
+    def check_set_valid(self, nodes, budget):
+        # ensure no nodes are duplicated
+        assert len(nodes) == len(set(nodes)), 'Uh oh! We have duplicate nodes.'
+        cost = self.get_set_cost(nodes)
+        assert cost <= budget, 'Uh oh! Cost {} exceeds budget {}'.format(cost, budget)
+
     def get_set_benefit(self, nodes):
         """ for a set of nodes, compute the total benefit
         (sum of benefits of node, plus complementarity of edges) """
-
-        # ensure no nodes are duplicated
-        assert len(nodes) == len(set(nodes)), 'Uh oh! We have duplicate nodes.'
 
         benefit = 0
 
