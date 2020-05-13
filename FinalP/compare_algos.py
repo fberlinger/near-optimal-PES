@@ -46,7 +46,7 @@ cc_values       = np.zeros(num_repeats)
 bf_values       = np.zeros(num_repeats)
 
 for i in range(num_repeats):
-    budget = 20
+    budget = 30
     graph = RandomGraph('Gnp', 15, edge_spec=.5, seed=None)
     print('\n\n', graph)
 
@@ -56,8 +56,9 @@ for i in range(num_repeats):
     opt_costs[i], opt_benefits[i], opt_values[i] = get_values(budget, opt_combo)
 
     print('---------------------------')
-    print('naive flatrate')
-    flatrate = budget / graph.size
+    print('naive flat rate')
+    # flatrate = budget / graph.size * 8
+    flatrate = 6
     flatrate_combo = naive_flatrate(graph, budget, flatrate)
     flatrate_costs[i], flatrate_benefits[i], flatrate_values[i] = get_values(budget, flatrate_combo)
 
@@ -83,8 +84,8 @@ for i in range(num_repeats):
 
 
 # display bar graph
-display = [('best combo', opt_costs.mean(), opt_benefits.mean(), opt_values.mean()), # no error bar for best
-           ('naive flatrate', flatrate_costs, flatrate_benefits, flatrate_values),
+display = [('optimal', opt_costs.mean(), opt_benefits.mean(), opt_values.mean()), # no error bar for best
+           ('naive flat rate', flatrate_costs, flatrate_benefits, flatrate_values),
            ('greedy node', greedy_costs, greedy_benefits, greedy_values),
            ('MST', spanning_costs, spanning_benefits, spanning_values),
            ('max CC', cc_costs, cc_benefits, cc_values),
