@@ -136,7 +136,7 @@ def bar_values():
     plt.savefig('plot_bar_value.png')
 
 def vary_budget():
-    budgets     = [20, 25, 30, 40, 50]
+    budgets     = [5, 20, 25, 30, 40, 50, 100]
     num_nodes   = 15
     edge_spec   = .3
     num_repeats = 30
@@ -196,15 +196,27 @@ def vary_budget():
     # print(bf_values)
 
     plt.figure()
-    plt.errorbar(budgets, opt_values.mean(axis=1), yerr=None, label='optimal', ecolor='black', elinewidth=.5, color='forestgreen')
-    plt.errorbar(budgets, flatrate_values.mean(axis=1), yerr=flatrate_values.std(axis=1), label='naive flat rate', ecolor='black', elinewidth=.5, color='gold')
-    plt.errorbar(budgets, greedy_values.mean(axis=1), yerr=greedy_values.std(axis=1), label='greedy node', ecolor='black', elinewidth=.5, color='red')
-    plt.errorbar(budgets, spanning_values.mean(axis=1), yerr=spanning_values.std(axis=1), label='MST', ecolor='black', elinewidth=.5, color='royalblue')
-    plt.errorbar(budgets, cc_values.mean(axis=1), yerr=cc_values.std(axis=1), label='max CC', ecolor='black', elinewidth=.5, color='darkturquoise')
-    plt.errorbar(budgets, bf_values.mean(axis=1), yerr=bf_values.std(axis=1), label='bellman-ford', ecolor='black', elinewidth=.5, color='darkviolet')
+    plt.errorbar(budgets, (opt_values / opt_values).mean(axis=1), yerr=(opt_values / opt_values).std(axis=1),
+                          label='optimal', #ecolor='black',
+                          elinewidth=.5, color='forestgreen')
+    plt.errorbar(budgets, (flatrate_values / opt_values).mean(axis=1), yerr=(flatrate_values / opt_values).std(axis=1),
+                          label='naive flat rate', #ecolor='black',
+                          elinewidth=.5, color='gold')
+    plt.errorbar(budgets, (greedy_values / opt_values).mean(axis=1), yerr=(greedy_values / opt_values).std(axis=1),
+                          label='greedy node', #ecolor='black',
+                          elinewidth=.5, color='red')
+    plt.errorbar(budgets, (spanning_values / opt_values).mean(axis=1), yerr=(spanning_values / opt_values).std(axis=1),
+                          label='MST', #ecolor='black',
+                          elinewidth=.5, color='royalblue')
+    plt.errorbar(budgets, (cc_values / opt_values).mean(axis=1), yerr=(cc_values / opt_values).std(axis=1),
+                          label='max CC', #ecolor='black',
+                          elinewidth=.5, color='darkturquoise')
+    plt.errorbar(budgets, (bf_values / opt_values).mean(axis=1), yerr=(bf_values / opt_values).std(axis=1),
+                          label='bellman-ford', #ecolor='black',
+                          elinewidth=.5, color='darkviolet')
     plt.legend()
     plt.xlabel('Budget')
-    plt.ylabel('Average value')
+    plt.ylabel('Average value (% of optimal)')
     plt.tight_layout()
     plt.savefig('plot_vary_budget.png')
     plt.show()

@@ -66,8 +66,8 @@ def max_component(graph, budget):
     ratios = []
     for i, component in enumerate(components):
         benefit = graph.get_set_benefit(component)
-        cost = graph.get_set_cost(component)
-        print('  component {}, size {}, {} - {} = {}'.format(i, len(component), benefit, cost, benefit-cost))
+        cost    = graph.get_set_cost(component)
+        # print('  component {}, size {}, {} - {} = {}'.format(i, len(component), benefit, cost, benefit-cost))
         # values.append(benefit - cost)
         ratios.append(cost / benefit)
 
@@ -96,14 +96,8 @@ def max_component(graph, budget):
             for i in range(len(components[idx])):
                 subgraph.graph[i] = [[v_to_subgraph[adj], weight] for adj, weight in graph.graph[subgraph_to_v[i]]]
 
-            subgraph.node_weights = []
-            # print('v_to_subgraph', v_to_subgraph)
-            for i in range(len(components[idx])):
-                # print('subgraph_to_v[i]', subgraph_to_v[i])
-                subgraph.node_weights.append([v_to_subgraph[graph.node_weights[subgraph_to_v[i]][0]],
-                                              graph.node_weights[subgraph_to_v[i]][1]])
-            # subgraph.node_weights = [[v_to_subgraph[graph.node_weights[subgraph_to_v[i]][0]],
-            #                           graph.node_weights[subgraph_to_v[i]][1]] for i in range(len(components[idx]))]
+            subgraph.node_weights = [[graph.node_weights[subgraph_to_v[i]][0],
+                                      graph.node_weights[subgraph_to_v[i]][1]] for i in range(len(components[idx]))]
             # subgraph.edges = 0
 
             sub_nodes, sub_value = spanning_tree(subgraph, remaining_budget)
