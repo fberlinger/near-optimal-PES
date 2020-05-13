@@ -188,15 +188,15 @@ def vary_budget():
             bf_combo = select_bellman_ford(graph, budget)
             _, _, bf_values[b][i] = get_values(graph, budget, bf_combo)
 
-    # print(opt_values)
-    # print(flatrate_values)
-    # print(greedy_values)
-    # print(spanning_values)
-    # print(cc_values)
-    # print(bf_values)
+    print(opt_values)
+    print(flatrate_values)
+    print(greedy_values)
+    print(spanning_values)
+    print(cc_values)
+    print(bf_values)
 
     plt.figure()
-    plt.errorbar(budgets, (opt_values / opt_values).mean(axis=1), yerr=(opt_values / opt_values).std(axis=1),
+    plt.errorbar(budgets, (opt_values / opt_values).mean(axis=1), yerr=None,
                           label='optimal', #ecolor='black',
                           elinewidth=.5, color='forestgreen')
     plt.errorbar(budgets, (flatrate_values / opt_values).mean(axis=1), yerr=(flatrate_values / opt_values).std(axis=1),
@@ -219,6 +219,16 @@ def vary_budget():
     plt.ylabel('Average value (% of optimal)')
     plt.tight_layout()
     plt.savefig('plot_vary_budget.png')
+    plt.show()
+
+    # plot optimal value only
+    plt.figure()
+    plt.plot(budgets, opt_values.mean(axis=1), label='optimal', color='forestgreen', marker='o', linestyle='-')
+    plt.legend()
+    plt.xlabel('Budget')
+    plt.ylabel('Value')
+    plt.tight_layout()
+    plt.savefig('plot_vary_budget_optimal.png')
     plt.show()
 
 
