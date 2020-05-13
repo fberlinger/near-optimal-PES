@@ -10,10 +10,10 @@ from lib_heap import Heap
 
 
 #### RANDOM GRAPH #############################################################
-'''
+
 graph_type = 'Gnm'
 graph_size = 20 # n
-no_edges = 15 # m
+no_edges = 10 # m
 G = RandomGraph(graph_type, graph_size, no_edges)
 #print(G.graph)
 #print(G.node_weights)
@@ -21,28 +21,28 @@ exp_graph = G.graph
 exp_node_weights = G.node_weights
 no_nodes = graph_size
 
-budget = graph_size*2 # example budget
-'''
+budget = graph_size*1.5 # example budget
+
 ###############################################################################
 
 
 
 #### SIMPLE EXAMPLE GRAPH #####################################################
 
-no_nodes = 4 # number of nodes
+# number of nodes
+no_nodes = 4
 # adjacency list
 # format: [neighbor, edge weight]
-exp_graph = [[[1, 4], [2, 7]],
-             [[2, 1], [0, 4], [3, 9]],
-             [[1, 1], [0, 7]],
-             [[1, 9]]]
-exp_node_weights = [[1, 8], [1, 1], [9, 11], [20, 2]]  # [cost, value]
+exp_graph = [[[1, 4], [2, 7]], [[2, 1], [0, 4], [3, 9]], [[1, 1], [0, 7]], [[1, 9]]]
+# [cost, value]
+exp_node_weights = [[1, 8], [1, 1], [9, 11], [3, 2]]
 
-budget = no_nodes*4 # example budget
+budget = no_nodes*3 # example budget
 
 ###############################################################################
 
 
+#### NAIVE SOLUTION ###########################################################
 
 #### BRUTE FORCE ALL COMBINATIONS #############################################
 def combinations(graph, all_combs, all_costs, all_values, start, prev_cost, prev_value, prev_nodes):
@@ -103,7 +103,8 @@ get_best_combination(graph, budget)
 
 
 #### GREEDY NODE QUALITY ######################################################
-budget = math.inf # example budget
+# sort nodes by their quality, which is their own value plus the sum of the values of all connecting edges
+'''
 
 # sort nodes by their quality, which is their own value plus the sum of the values of all connecting edges
 node_qualities = []
@@ -145,12 +146,13 @@ for node in node_set:
 comp /= 2 # counted each edge twice
 value += comp
 print(value)
+'''
 ###############################################################################
 
 
 
 #### GREEDY MAXIMUM SPANNING TREE #############################################
-def prim_MST(s):
+def prim_MST():
     """Runs Prim's algorithm to find a maximum spanning tree (MST).
 
     Four modifications to standard minimum spanning tree:
@@ -165,9 +167,13 @@ def prim_MST(s):
     Returns:
         tuple (set, int): ({node IDs in MST}, value of MST)
     """
+    node_list = list(node_set)
+    s = random.choice(node_list)
+
     val_s = -exp_node_weights[s][1] + exp_node_weights[s][0] # value of starting node
     value = 0 # MST value
     cost = 0 # MST cost
+    add_cost = 0
     compensation = 0 # compensation for edges that are counted twice
 
     prev = [0]*no_nodes
@@ -214,8 +220,9 @@ def prim_MST(s):
                     H.decrease_key(w[0], dist[w[0]], comp)
 
     MST_value = -(value-compensation)
-    return (S, MST_value)
-
+    del H
+    return (S, MST_value, cost, add_cost)
+'''
 # start with most promising node
 best_val = -math.inf
 best_ind = -math.inf
@@ -224,9 +231,93 @@ for ind, weight in enumerate(exp_node_weights):
     if current_val > best_val:
         best_val = current_val
         best_ind = ind
-
-MST_nodes, MST_value = prim_MST(best_ind)
+'''
+'''
 print('\nspanning tree')
-print(MST_nodes)
-print(MST_value)
+remaining_budget = budget
+value = 0
+nodes = set()
+node_set = set(range(no_nodes))
+add_cost = 0
+while node_set and remaining_budget > 6:
+    MST_nodes, MST_value, MST_cost, add_cost = prim_MST()
+    value += MST_value
+    nodes.update(MST_nodes)
+    node_set -= MST_nodes
+    remaining_budget -= MST_cost
+    #print(value, remaining_budget)
+    #print(nodes, node_set)
+    #print('\n')
+#print(nodes)
+#print()
+print(nodes)
+print(value)
+'''
 ###############################################################################
+
+
+combos = 0
+nodeqs = 0
+strees = 0
+for ii in range(10):
+    #combos
+    all_combs = []
+    all_costs = []
+    all_values = []
+    combinations(graph, all_combs, all_costs, all_values, 0, 0, 0, [])
+    # find first winner that fits budget
+    winners = sorted(((val, ind) for ind, val in enumerate(all_values)), reverse=True)
+    for winner in winners:
+        cost = all_costs[winner[1]]
+        if cost <= budget:
+            combos += winner[0]
+            break
+    # nodeqs
+    node_qualities = []
+    for node in range(no_nodes):
+        node_value = exp_node_weights[node][1] - exp_node_weights[node][0]
+        edge_values = 0
+        for adjacent in exp_graph[node]:
+            edge_values += adjacent[1]
+        node_quality = node_value + edge_values
+        node_qualities.append(node_quality)
+    sorted_qualities = sorted(((val, ind) for ind, val in enumerate(node_qualities)), reverse=True)
+    # greedily add nodes in order of their quality
+    cost = 0
+    value = 0
+    node_set = set()
+    for node in sorted_qualities:
+        if node[0] < 0: # only nodes of negative quality, i.e., cost, left
+            break
+        cost += exp_node_weights[node[1]][0]
+        if cost > budget:
+            break
+        value += exp_node_weights[node[1]][1] - exp_node_weights[node[1]][0]
+        node_set.add(node[1])
+    # complementarity values
+    comp = 0
+    for node in node_set:
+        for adjacent in exp_graph[node]:
+            if adjacent[0] in node_set:
+                comp += adjacent[1]
+    comp /= 2 # counted each edge twice
+    value += comp
+    nodeqs += value
+    # strees
+    remaining_budget = budget
+    value = 0
+    nodes = set()
+    node_set = set(range(no_nodes))
+    add_cost = 0
+    while node_set and remaining_budget > 6:
+        MST_nodes, MST_value, MST_cost, add_cost = prim_MST()
+        value += MST_value
+        nodes.update(MST_nodes)
+        node_set -= MST_nodes
+        remaining_budget -= MST_cost
+
+    strees += value
+combos /= 10
+nodeqs /= 10
+strees /= 10
+print(combos, nodeqs, strees)
