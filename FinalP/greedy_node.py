@@ -47,7 +47,7 @@ def greedy_node(graph, budget):
                 comp += adjacent[1]
     comp /= 2 # counted each edge twice
     value += comp
-    
+
     return (node_set, value)
 
 

@@ -10,18 +10,17 @@ def main():
     print(graph)
     budget = 100
     flatrate = 4
-    nodes, value = naive_flatrate(graph, budget, flatrate)
+    nodes = naive_flatrate(graph, budget, flatrate)
     print('selected nodes ', nodes)
-    print('total value    ', value)
+    print('total value    ', graph.get_set_value(value))
 
 def naive_flatrate(graph, budget, flatrate):
     """No complementarities, pays same flatrate amount to all landowners in decreaseing order of property value, landowners accept if flatrate above their (hidden) cost
-    
+
     Args:
         graph (TYPE): Description
         budget (TYPE): Description
     """
-    value = 0
     cost = 0
     nodes = set()
 
@@ -39,19 +38,8 @@ def naive_flatrate(graph, budget, flatrate):
         if node_cost <= flatrate:
             nodes.add(node_id)
             cost += flatrate
-            value += node_value
 
-
-    # complementarity values
-    comp = 0
-    for node in nodes:
-        for adjacent in graph.graph[node]:
-            if adjacent[0] in nodes:
-                comp += adjacent[1]
-    comp /= 2 # counted each edge twice
-    value += comp
-
-    return (nodes, value)
+    return nodes
 
 if __name__ == '__main__':
     main()

@@ -82,6 +82,7 @@ def prim_MST(graph, budget, node_set):
 
     MST_value = -(value-compensation)
     del H
+    print('return', S, MST_value, cost, add_cost)
     return (S, MST_value, cost, add_cost)
 
 def spanning_tree(graph, budget):
@@ -97,7 +98,7 @@ def spanning_tree(graph, budget):
         nodes.update(MST_nodes)
         node_set -= MST_nodes
         remaining_budget -= MST_cost
-    
+
     return (nodes, value)
 
 

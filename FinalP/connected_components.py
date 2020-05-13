@@ -40,16 +40,20 @@ def connected_components(graph):
             # if the queue has items, we continue to grow our connected component
             v = q.popleft()
             components[-1].append(v)
+            # print('from queue', v)
         else:
             # if the queue is empty, we start a new connected component
             v = next(iter(not_visited))
             components.append([v])
+            # print('new component', v)
 
         # add all neighbors of this node
         for adj, weight in graph.graph[v]:
             if adj in not_visited:
                 q.append(adj)
-        not_visited.remove(v)
+                not_visited.remove(adj)
+        # print(not_visited, q)
+        not_visited.discard(v)
 
     return components
 
