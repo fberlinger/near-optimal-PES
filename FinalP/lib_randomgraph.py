@@ -34,6 +34,8 @@ class RandomGraph():
             self.generate_Gnm(graph_size, edge_spec)
         elif graph_type == 'grid':
             self.generate_grid(graph_size)
+        elif graph_type == 'manual':
+            pass
         else:
             print('Invalid graph type. Choose from Gnp and Gnm.')
 
@@ -47,6 +49,7 @@ class RandomGraph():
         out += 'graph: ' + str(self.graph) + '\n'
         out += 'node_weights: ' + str(self.node_weights) + '\n'
         out += 'edges: {}'.format(self.edges)
+        out += '\n'
         return out
 
     def get_set_cost(self, nodes):
@@ -62,6 +65,9 @@ class RandomGraph():
     def get_set_benefit(self, nodes):
         """ for a set of nodes, compute the total benefit
         (sum of benefits of node, plus complementarity of edges) """
+
+        # ensure no nodes are duplicated
+        assert len(nodes) == len(set(nodes)), 'Uh oh! We have duplicate nodes.'
 
         benefit = 0
 
@@ -79,6 +85,11 @@ class RandomGraph():
         benefit += edge_benefit / 2   # edges are double counted
 
         return benefit
+
+    def get_set_value(self, nodes):
+        """ for a set of nodes, compute the total value
+        (sum of benefits - sum of costs) """
+        return self.get_set_benefit(nodes) - self.get_set_cost(nodes)
 
     def within_budget(self, budget):
         """ returns True/False of whether graph is within the budget """
