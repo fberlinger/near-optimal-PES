@@ -3,10 +3,10 @@
 from lib_randomgraph import RandomGraph
 from naive_flatrate import naive_flatrate
 from all_combos import get_best_combination
-from max_spanning_tree import spanning_tree #prim_MST
+from max_spanning_tree import spanning_tree
 from greedy_node import greedy_node
 from bellman_ford import select_bellman_ford
-from connected_components import max_component #connected_components
+from connected_components import max_component
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -27,10 +27,10 @@ def get_values(graph, budget, combo, verbose=False):
 def bar_values():
     """ run experiments and plot bar graph showing value attained by each algorithm """
 
-    num_repeats = 5
+    num_repeats = 30
     budget      = 30
     num_nodes   = 15
-    edge_spec   = .5
+    edge_spec   = .3
 
     opt_costs      = np.zeros(num_repeats)
     flatrate_costs = np.zeros(num_repeats)
@@ -65,7 +65,7 @@ def bar_values():
         print('---------------------------')
         print('naive flat rate')
         # flatrate = budget / graph.size * 8
-        flatrate = 6
+        flatrate = 4
         flatrate_combo = naive_flatrate(graph, budget, flatrate)
         flatrate_costs[i], flatrate_benefits[i], flatrate_values[i] = get_values(graph, budget, flatrate_combo)
 
@@ -132,14 +132,16 @@ def bar_values():
     plt.ylabel('Value (% of optimal)')
     plt.xlabel('Method')
     plt.tight_layout()
-    plt.show()
     plt.savefig('plot_bar_value.png')
+    plt.show()
 
-def vary_budget():
+
+def vary_budget(graph_type):
     budgets     = [5, 20, 25, 30, 40, 50, 70, 100]
-    num_nodes   = 15
-    edge_spec   = .3
     num_repeats = 30
+    num_nodes   = 15
+    p           = .3  # if Gnp
+    m           = 30  # if Gnm
 
     opt_values      = np.zeros((len(budgets), num_repeats))
     flatrate_values = np.zeros((len(budgets), num_repeats))
@@ -152,7 +154,13 @@ def vary_budget():
     seeds = np.random.random(num_repeats)
 
     for i in range(num_repeats):
-        graph = RandomGraph('Gnp', num_nodes, edge_spec=edge_spec, seed=seeds[i])
+        if graph_type == 'Gnp':
+            graph = RandomGraph('Gnp', num_nodes, edge_spec=p, seed=seeds[i])
+        elif graph_type == 'grid':
+            graph = RandomGraph('grid', num_nodes, seed=seeds[i])
+        elif graph_type == 'Gnm':
+            graph = RandomGraph('Gnp', num_nodes, edge_spec=m, seed=seeds[i])
+
         print('\n\n', graph)
         for b, budget in enumerate(budgets):
 
@@ -214,7 +222,7 @@ def vary_budget():
                           label='greedy node', #ecolor='black',
                           elinewidth=.5, color='red')
     plt.errorbar(budgets, spanning_values.mean(axis=1), yerr=spanning_values.std(axis=1),
-                          label='MST', #ecolor='black',
+                          label='greedy MST', #ecolor='black',
                           elinewidth=.5, color='royalblue')
     plt.errorbar(budgets, cc_values.mean(axis=1), yerr=cc_values.std(axis=1),
                           label='max CC', #ecolor='black',
@@ -226,7 +234,7 @@ def vary_budget():
     plt.xlabel('Budget')
     plt.ylabel('Average value (% of optimal)')
     plt.tight_layout()
-    plt.savefig('plot_vary_budget.png')
+    plt.savefig('plot_vary_budget-{}-n={}.png'.format(graph_type, num_nodes))
     plt.show()
 
     # # plot optimal value only
@@ -243,4 +251,4 @@ def vary_budget():
 
 if __name__ == '__main__':
     # bar_values()
-    vary_budget()
+    vary_budget('Gnp')

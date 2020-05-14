@@ -1,3 +1,5 @@
+""" modify Bellman-Ford algorithm for single-source shortest path """
+
 from lib_randomgraph import RandomGraph
 import numpy as np
 
@@ -43,7 +45,6 @@ def bellman_ford(graph, s, budget):
 
 def select_bellman_ford(graph, budget):
     # start with lowest cost/benefit node
-    # (or highest value node?)
     node_costs    = np.array(graph.get_node_costs())
     node_benefits = np.array(graph.get_node_benefits())
     node_values   = np.array(graph.get_node_values())

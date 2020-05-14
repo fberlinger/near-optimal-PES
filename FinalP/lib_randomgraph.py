@@ -149,6 +149,9 @@ class RandomGraph():
         Args:
             n (int): Number of nodes
         """
+        # TODO: code currently breaks...
+        # need to incorporate weights of edges
+
         # number of nodes has to be the square of an integer
         side_length = math.floor(math.sqrt(n))
         no_nodes = side_length**2

@@ -1,3 +1,6 @@
+""" compute connected components
+use MST as a subroutine """
+
 from collections import deque
 from lib_randomgraph import RandomGraph
 import numpy as np
