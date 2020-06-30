@@ -125,6 +125,10 @@ def bar_values():
     values = [100 * (entry[3] / display[0][3]).mean() for entry in display]
     stdev =  [100 * (entry[3] / display[0][3]).std() for entry in display]
 
+    print('methods', [entry[0] for entry in display])
+    print('values', np.round(values, 2))
+    print('stdev ', np.round(stdev, 2))
+
     plt.figure()
     X = np.arange(len(display))
     plt.bar(X, values, yerr=stdev, color='Blue')
@@ -250,5 +254,5 @@ def vary_budget(graph_type):
 
 
 if __name__ == '__main__':
-    # bar_values()
-    vary_budget('Gnp')
+    bar_values()
+    # vary_budget('Gnp')
