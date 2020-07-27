@@ -4,7 +4,8 @@ from lib_randomgraph import RandomGraph
 import numpy as np
 
 def main():
-    graph = RandomGraph('Gnp', 4, edge_spec=.5, seed=42)
+    #graph = RandomGraph('Gnp', 4, edge_spec=.5, seed=42)
+    graph = RandomGraph('grid', 11)
 
     print(graph)
     dist, pred = bellman_ford(graph, 1, 10)

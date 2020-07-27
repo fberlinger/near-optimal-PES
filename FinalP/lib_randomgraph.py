@@ -138,7 +138,7 @@ class RandomGraph():
                 nodes = random.sample(range(n), 2)
                 if not nodes[1] in extract(self.graph[nodes[0]]):
                     self.edges += 1
-                    weight = random.randint(0, 10)
+                    weight = random.randint(0, 11)
                     self.graph[nodes[0]].append([nodes[1], weight])
                     self.graph[nodes[1]].append([nodes[0], weight]) # undirected
                     break
@@ -149,54 +149,65 @@ class RandomGraph():
         Args:
             n (int): Number of nodes
         """
-        # TODO: code currently breaks...
-        # need to incorporate weights of edges
 
         # number of nodes has to be the square of an integer
         side_length = math.floor(math.sqrt(n))
         no_nodes = side_length**2
+        self.edges = 2*(side_length-1)*side_length
         # overwrite graph and agents if size has changed
         if no_nodes != n:
+            self.size = no_nodes
             self.graph = [[] for n in range(no_nodes)] # adjacency list
+            self.node_weights = [[random.randint(2, 6), random.randint(4, 10)] for n in range(no_nodes)] # cost, benefit
 
+        # generate graph in adjacency list format
         # bottom
-        self.graph[0].append(1)
-        self.graph[0].append(side_length)
-        self.graph[side_length-1].append(side_length-2)
-        self.graph[side_length-1].append(2*side_length-1)
+        self.graph[0].append([1])
+        self.graph[0].append([side_length])
+        self.graph[side_length-1].append([side_length-2])
+        self.graph[side_length-1].append([2*side_length-1])
         for n in range(1, side_length-1):
-            self.graph[n].append(n-1) # left
-            self.graph[n].append(n+1) # right
-            self.graph[n].append(n+side_length) # above
+            self.graph[n].append([n-1]) # left
+            self.graph[n].append([n+1]) # right
+            self.graph[n].append([n+side_length]) # above
 
         # top
         t = (side_length-1)*side_length
-        self.graph[t].append(t+1)
-        self.graph[t].append(t-side_length)
-        self.graph[no_nodes-1].append(no_nodes-2)
-        self.graph[no_nodes-1].append(no_nodes-1-side_length)
+        self.graph[t].append([t+1])
+        self.graph[t].append([t-side_length])
+        self.graph[no_nodes-1].append([no_nodes-2])
+        self.graph[no_nodes-1].append([no_nodes-1-side_length])
         for n in range(t+1, t+side_length-1):
-            self.graph[n].append(n-1) # left
-            self.graph[n].append(n+1) # right
-            self.graph[n].append(n-side_length) # below
+            self.graph[n].append([n-1]) # left
+            self.graph[n].append([n+1]) # right
+            self.graph[n].append([n-side_length]) # below
 
         # left
         for n in range(side_length, t, side_length):
-            self.graph[n].append(n-side_length) # below
-            self.graph[n].append(n+side_length) # above
-            self.graph[n].append(n+1) # right
+            self.graph[n].append([n-side_length]) # below
+            self.graph[n].append([n+side_length]) # above
+            self.graph[n].append([n+1]) # right
 
         # right
         for n in range(2*side_length-1, no_nodes-1, side_length):
-            self.graph[n].append(n-side_length) # below
-            self.graph[n].append(n+side_length) # above
-            self.graph[n].append(n-1) # left
+            self.graph[n].append([n-side_length]) # below
+            self.graph[n].append([n+side_length]) # above
+            self.graph[n].append([n-1]) # left
 
         # inside
         for row in range(1, side_length-1):
             for col in range(1, side_length-1):
                 node = row*side_length + col
-                self.graph[node].append(node-side_length) # below
-                self.graph[node].append(node+side_length) # above
-                self.graph[node].append(node-1) # left
-                self.graph[node].append(node+1) # right
+                self.graph[node].append([node-side_length]) # below
+                self.graph[node].append([node+side_length]) # above
+                self.graph[node].append([node-1]) # left
+                self.graph[node].append([node+1]) # right
+
+        # add edge weights
+        for node in range(no_nodes):
+            for neighbor in enumerate(self.graph[node]):
+                if len(neighbor[1]) == 1:
+                    weight = random.randint(0, 11)
+                    ind = self.graph[neighbor[1][0]].index([node])
+                    self.graph[node][neighbor[0]].append(weight)
+                    self.graph[neighbor[1][0]][ind].append(weight) # undirected
