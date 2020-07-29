@@ -24,7 +24,7 @@ def get_values(graph, budget, combo, verbose=False):
     return cost, benefit, benefit-cost
 
 
-def bar_values():
+def bar_values(graph_type):
     """ run experiments and plot bar graph showing value attained by each algorithm """
 
     num_repeats = 30
@@ -54,7 +54,14 @@ def bar_values():
     bf_values       = np.zeros(num_repeats)
 
     for i in range(num_repeats):
-        graph = RandomGraph('Gnp', num_nodes, edge_spec=edge_spec, seed=None)
+
+        if graph_type == 'Gnp':
+            graph = RandomGraph('Gnp', num_nodes, edge_spec=edge_spec, seed=None)
+        elif graph_type == 'grid':
+            graph = RandomGraph('grid', num_nodes, seed=None)
+        elif graph_type == 'Gnm':
+            graph = RandomGraph('Gnp', num_nodes, edge_spec=edge_spec, seed=None)
+        # graph = RandomGraph('Gnp', num_nodes, edge_spec=edge_spec, seed=None)
         print('\n\n', graph)
 
         print('---------------------------')
@@ -135,6 +142,7 @@ def bar_values():
     plt.xticks(X, [entry[0] for entry in display], rotation=30)
     plt.ylabel('Value (% of optimal)')
     plt.xlabel('Method')
+    plt.title('graph_type = {}'.format(graph_type))
     plt.tight_layout()
     plt.savefig('plot_bar_value.png')
     plt.show()
@@ -237,6 +245,7 @@ def vary_budget(graph_type):
     plt.legend()
     plt.xlabel('Budget')
     plt.ylabel('Average value (% of optimal)')
+    plt.title('graph_type = {}'.format(graph_type))
     plt.tight_layout()
     plt.savefig('plot_vary_budget-{}-n={}.png'.format(graph_type, num_nodes))
     plt.show()
@@ -254,5 +263,6 @@ def vary_budget(graph_type):
 
 
 if __name__ == '__main__':
-    bar_values()
-    # vary_budget('Gnp')
+    graph_type = 'grid'
+    # bar_values(graph_type)
+    vary_budget(graph_type)
