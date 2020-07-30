@@ -195,7 +195,8 @@ def vary_budget(graph_type):
 
             # print('---------------------------')
             # print('spanning tree')
-            spanning_combo, spanning_value = spanning_tree(graph, budget)
+
+            spanning_combo, _ = spanning_tree(graph, budget)
             _, _, spanning_values[b][i] = get_values(graph, budget, spanning_combo)
 
             # print('---------------------------')

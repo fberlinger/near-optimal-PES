@@ -92,15 +92,16 @@ def spanning_tree(graph, budget):
     # 6 because currently max cost of a node
     # Florian: imagine you have less than that money left but still nodes
     # that cost more than that. you would never terminate
-    while node_set and remaining_budget > 6:
+    while node_set and remaining_budget >= max([graph.node_weights[node][0] for node in node_set]):
         MST_nodes, MST_value, MST_cost = prim_MST(graph, remaining_budget, node_set)
         value += MST_value
         nodes.update(MST_nodes)
         node_set -= MST_nodes
         remaining_budget -= MST_cost
 
-        if len(MST_nodes) == 0:
-            break
+        # LILY NOTE: had to comment this out. otherwise, MST was not reaching optimal with high budget
+        # if len(MST_nodes) == 0:
+        #     break
 
     return (nodes, value)
 
